@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+
+package hospital;
+
+option java_package = "ar.edu.itba.pod.grpc.hopspital";
+option java_outer_classname = "HospitalServiceModel";
+option java_multiple_files = true;
+
+service TrainTicketService{
+//  rpc GetDestinations(google.protobuf.Empty) returns (Destinations);
+//  rpc GetTrainsForDestination(google.protobuf.StringValue) returns (stream Train);
+//  rpc PurchaseTicket(stream Ticket) returns (Reservation);
+//  rpc GetTicketsForReservations(stream Reservation) returns (stream Ticket);
+}
+
+message Doctor {
+  string name = 1;
+  uint32 level = 2;
+
+  enum Availability {
+    UNSPECIFIED = 0;
+    AVAILABLE = 1;
+    UNAVAILABLE = 2;
+    ATTENDING = 3;
+  }
+
+  Availability availability = 3;
+}
+
+message Patient {
+  string name = 1;
+  uint32 level = 2;
+}
+
+message WaitingRoom {
+  repeated Patient patients = 1;
+}
+
+message Room {
+  uint32 number = 1;
+  Patient patient = 2;
+  Doctor doctor = 3;
+}
+
