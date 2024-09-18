@@ -12,6 +12,8 @@ public class Client {
     private static Logger logger = LoggerFactory.getLogger(Client.class);
 
     public static void main(String[] args) throws InterruptedException {
+        logger.error(System.getProperty("serverAddress"));
+
         logger.info("tpe1-g2 Client Starting ...");
         logger.info("grpc-com-patterns Client Starting ...");
         ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50051)
