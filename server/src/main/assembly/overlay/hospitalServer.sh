@@ -9,11 +9,8 @@ print_error() {
 
 print_help() {
   printf "Usage: $(basename $0) -DserverAddress=xx.xx.xx.xx:yyyy
--Daction=actionName [ -Ddoctor=doctorName | -Dlevel=levelNumber |
--Davailability=availabilityName ]
 
-\t-DserverAddress    Server address and port
-\t-Daction           Action to perform. Possible values: 'addRoom', 'addDoctor', 'setDoctor', 'checkDoctor'\n"
+\t-DserverAddress    Server address and port\n"
   exit 0
 }
 
@@ -25,6 +22,6 @@ for i in "$@"; do
   esac
 done
 
-MAIN_CLASS="ar.edu.itba.pod.grpc.client.AdministrationClient"
+MAIN_CLASS="ar.edu.itba.pod.grpc.server.Server"
 
 java $JAVA_OPTS -cp 'lib/jars/*' $MAIN_CLASS $*

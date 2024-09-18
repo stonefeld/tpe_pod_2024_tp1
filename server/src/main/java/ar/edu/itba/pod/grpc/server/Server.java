@@ -13,7 +13,7 @@ public class Server {
     private static Logger logger = LoggerFactory.getLogger(Server.class);
 
     public static void main(String[] args) throws InterruptedException, IOException {
-        logger.info(" Server Starting ...");
+        logger.info("Server Starting ...");
 
         final RoomRepository roomRepository = new RoomRepository();
 
@@ -22,7 +22,7 @@ public class Server {
                 .addService(new AdministrationServant(roomRepository))
                 .build();
         server.start();
-        logger.info("Server started, listening on " + port);
+        logger.info("Server started, listening on {}", port);
 
         server.awaitTermination();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
