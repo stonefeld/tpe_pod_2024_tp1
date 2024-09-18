@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+import "hospital/messages.proto";
+import "google/protobuf/empty.proto";
+
+package hospital.emergencycare;
+
+option java_package = "ar.edu.itba.pod.grpc.hospital.emergencycare";
+option java_outer_classname = "EmergencyCareServiceModel";
+option java_multiple_files = true;
+
+service EmergencyCareService {
+
+  // Care for a patient by a doctor in the room given
+  rpc CarePatient(Room) returns (Treatment);
+
+  // Care all possible patients
+  rpc CareAllPatients(google.protobuf.Empty) returns (MultiTreatment);
+
+  // Finish a treatment in a set room - discharge patient
+  rpc DischargePatient(TreatmentEnding) returns (Treatment);
+
+}
+
+message MultiTreatment {
+  repeated Treatment treatments = 1;
+}
+
+message TreatmentEnding {
+  string doctorName = 1;
+  string patientName = 2;
+  uint32 room = 3;
+}

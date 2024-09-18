@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+import "hospital/messages.proto";
+
+package hospital.doctorpager;
+
+option java_package = "ar.edu.itba.pod.grpc.hospital.doctorpager";
+option java_outer_classname = "DoctorPagerServiceModel";
+option java_multiple_files = true;
+
+service DoctorPagerService {
+
+  // Register for pager
+  rpc Register(DoctorRegistration) returns (stream Event);
+
+  // Unregister from pager
+  rpc Unregister(DoctorRegistration) returns (Doctor);
+
+}
+
+message DoctorRegistration {
+  string name = 1;
+}
+
+message Event {
+  type type = 1;
+}
+
+enum type {
+  UNSPECIFIED = 0;
+  REGISTER = 1;
+  AVAILABILITY = 2;
+  TREATMENT = 3;
+  DISCHARGE = 4;
+}

@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+import "google/protobuf/wrappers.proto";
+import "hospital/messages.proto";
+
+package hospital.waitingroom;
+
+option java_package = "ar.edu.itba.pod.grpc.hospital.waitingroom";
+option java_outer_classname = "WaitingRoomServiceModel";
+option java_multiple_files = true;
+
+service WaitingRoomService {
+
+  // Adds
+  rpc AddPatient(Patient) returns (Patient);
+
+  // Update Patient Level
+  rpc UpdateLevel(Patient) returns (Patient);
+
+  // Returns the number of people ahead in the queue
+  rpc CheckPatient(google.protobuf.StringValue) returns (PatientQueueInfo);
+
+}
+
+message PatientQueueInfo {
+  Patient patient = 1;
+  uint32 queueLength = 2;
+}

@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package hospital;
+
+option java_package = "ar.edu.itba.pod.grpc.hospital";
+option java_outer_classname = "HospitalServiceModel";
+option java_multiple_files = true;
+
+enum Availability {
+  UNSPECIFIED = 0;
+  AVAILABLE = 1;
+  UNAVAILABLE = 2;
+  ATTENDING = 3;
+}
+
+message Doctor {
+  string name = 1;
+  uint32 level = 2;
+  Availability availability = 3;
+}
+
+message Patient {
+  string name = 1;
+  uint32 level = 2;
+}
+
+message Room {
+  uint32 number = 1;
+  Patient patient = 2;
+  Doctor doctor = 3;
+}
+
+message Treatment {
+  Patient patient = 1;
+  Doctor doctor = 2;
+  Room room = 3;
+}
