@@ -1,13 +1,13 @@
 package ar.edu.itba.pod.grpc.server.repositories;
 
 import ar.edu.itba.pod.grpc.hospital.Room;
+import com.google.protobuf.Empty;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class RoomRepository {
 
-    private final List<Room> rooms = new ArrayList<>();
+    private final SortedSet<Room> rooms = new TreeSet<>(Comparator.comparingInt(Room::getNumber));
 
     public Room addRoom() {
         Room room;
@@ -16,6 +16,10 @@ public class RoomRepository {
             rooms.add(room);
         }
         return room;
+    }
+
+    public List<Room> getRooms() {
+        return List.copyOf(rooms);
     }
 
 }

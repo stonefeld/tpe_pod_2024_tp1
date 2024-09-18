@@ -4,6 +4,7 @@ import ar.edu.itba.pod.grpc.server.repositories.DoctorRepository;
 import ar.edu.itba.pod.grpc.server.repositories.PatientRepository;
 import ar.edu.itba.pod.grpc.server.repositories.RoomRepository;
 import ar.edu.itba.pod.grpc.server.servants.AdministrationServant;
+import ar.edu.itba.pod.grpc.server.servants.QueryServant;
 import ar.edu.itba.pod.grpc.server.servants.WaitingRoomServant;
 import io.grpc.ServerBuilder;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ public class Server {
         io.grpc.Server server = ServerBuilder.forPort(port)
                 .addService(new AdministrationServant(roomRepository, doctorRepository))
                 .addService(new WaitingRoomServant(patientRepository))
+                .addService(new QueryServant(roomRepository))
                 .build();
         server.start();
         logger.info("Server started, listening on {}", port);
