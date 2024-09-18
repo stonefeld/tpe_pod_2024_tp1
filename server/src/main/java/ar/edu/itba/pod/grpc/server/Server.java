@@ -1,5 +1,6 @@
 package ar.edu.itba.pod.grpc.server;
 
+import ar.edu.itba.pod.grpc.server.repositories.DoctorRepository;
 import ar.edu.itba.pod.grpc.server.repositories.RoomRepository;
 import ar.edu.itba.pod.grpc.server.servants.AdministrationServant;
 import io.grpc.ServerBuilder;
@@ -16,10 +17,11 @@ public class Server {
         logger.info("Server Starting ...");
 
         final RoomRepository roomRepository = new RoomRepository();
+        final DoctorRepository doctorRepository = new DoctorRepository();
 
         int port = 50051;
         io.grpc.Server server = ServerBuilder.forPort(port)
-                .addService(new AdministrationServant(roomRepository))
+                .addService(new AdministrationServant(roomRepository, doctorRepository))
                 .build();
         server.start();
         logger.info("Server started, listening on {}", port);

@@ -30,6 +30,6 @@ message DoctorCreation {
 }
 
 message DoctorAvailabilityUpdate {
-  Doctor doctor = 1;
+  string doctorName = 1;
   Availability availability = 2;
 }
