@@ -27,7 +27,7 @@ public class Server {
         io.grpc.Server server = ServerBuilder.forPort(port)
                 .addService(new AdministrationServant(roomRepository, doctorRepository))
                 .addService(new WaitingRoomServant(patientRepository))
-                .addService(new QueryServant(roomRepository))
+                .addService(new QueryServant(roomRepository, patientRepository))
                 .build();
         server.start();
         logger.info("Server started, listening on {}", port);

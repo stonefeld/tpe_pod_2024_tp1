@@ -1,6 +1,7 @@
 package ar.edu.itba.pod.grpc.server.repositories;
 
 import ar.edu.itba.pod.grpc.hospital.Patient;
+import ar.edu.itba.pod.grpc.hospital.Room;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,5 +16,9 @@ public class PatientRepository {
             patients.add(patient);
         }
         return patient;
+    }
+
+    public List<Patient> getPatients() {
+        return List.copyOf(patients);
     }
 }

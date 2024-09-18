@@ -1,9 +1,11 @@
 package ar.edu.itba.pod.grpc.client;
 
+import ar.edu.itba.pod.grpc.hospital.Patient;
 import ar.edu.itba.pod.grpc.hospital.Room;
 import ar.edu.itba.pod.grpc.hospital.query.QueryServiceGrpc;
 import ar.edu.itba.pod.grpc.hospital.query.QueryServiceGrpc.QueryServiceBlockingStub;
 import ar.edu.itba.pod.grpc.hospital.query.Rooms;
+import ar.edu.itba.pod.grpc.hospital.query.WaitingPatients;
 import com.google.protobuf.Empty;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -50,6 +52,16 @@ public class QueryClient {
                         e.printStackTrace();
                     }
                 }
+                case "queryWaitingRoom" -> {
+                    fileName = System.getProperty("outPath");
+                    final WaitingPatients patients = blockingStub.queryWaitingRoom(Empty.newBuilder().build());
+
+                    try {
+                        writePatientsToCSV(fileName, patients);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
                 default -> logger.error("Invalid action: {}", action);
             }
         } finally {
@@ -73,6 +85,23 @@ public class QueryClient {
                     : "";
 
             String csvLine = String.join(",", roomNumber, status, patient, doctor);
+            lines.add(csvLine);
+        }
+
+        Files.write(Paths.get(fileName), lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    // TODO: Modularizar
+    public static void writePatientsToCSV(String fileName, WaitingPatients patients) throws IOException {
+        List<String> lines = new ArrayList<>();
+
+        lines.add("Patient,Level");
+
+        for (Patient patient : patients.getPatientsList()) {
+            String roomNumber = patient.getName();
+            String level = String.valueOf(patient.getLevel());
+
+            String csvLine = String.join(",", roomNumber, level);
             lines.add(csvLine);
         }
 
