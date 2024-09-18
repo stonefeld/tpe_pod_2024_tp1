@@ -1,5 +1,7 @@
 package ar.edu.itba.pod.grpc.server;
 
+import ar.edu.itba.pod.grpc.server.repositories.RoomRepository;
+import ar.edu.itba.pod.grpc.server.servants.AdministrationServant;
 import io.grpc.ServerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,10 +15,15 @@ public class Server {
     public static void main(String[] args) throws InterruptedException, IOException {
         logger.info(" Server Starting ...");
 
+        final RoomRepository roomRepository = new RoomRepository();
+
         int port = 50051;
-        io.grpc.Server server = ServerBuilder.forPort(port).build();
+        io.grpc.Server server = ServerBuilder.forPort(port)
+                .addService(new AdministrationServant(roomRepository))
+                .build();
         server.start();
         logger.info("Server started, listening on " + port);
+
         server.awaitTermination();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.info("Shutting down gRPC server since JVM is shutting down");
