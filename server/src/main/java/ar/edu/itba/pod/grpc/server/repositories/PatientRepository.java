@@ -1,24 +1,34 @@
 package ar.edu.itba.pod.grpc.server.repositories;
 
 import ar.edu.itba.pod.grpc.hospital.Patient;
-import ar.edu.itba.pod.grpc.hospital.Room;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class PatientRepository {
-    private final List<Patient> patients = new ArrayList<>();
+
+    private final SortedMap<Integer, Queue<Patient>> patients = new TreeMap<>(Comparator.reverseOrder());
 
     public Patient addPatient(String name, int level) {
-        Patient patient;
-        patient = Patient.newBuilder().setName(name).setLevel(level).build();
+        Patient patient = Patient.newBuilder().setName(name).setLevel(level).build();
         synchronized (patients) {
-            patients.add(patient);
+            patients.computeIfAbsent(level, k -> new LinkedList<>()).add(patient);
         }
         return patient;
     }
 
     public List<Patient> getPatients() {
-        return List.copyOf(patients);
+        List<Patient> allPatients = new ArrayList<>();
+        for (Queue<Patient> patientQueue : patients.values())
+            allPatients.addAll(patientQueue);
+        return allPatients;
     }
+
+    public Patient getNextPatient() {
+        for (Map.Entry<Integer, Queue<Patient>> entry : patients.entrySet()) {
+            if (!entry.getValue().isEmpty())
+                return entry.getValue().poll();
+        }
+        return null;
+    }
+
 }

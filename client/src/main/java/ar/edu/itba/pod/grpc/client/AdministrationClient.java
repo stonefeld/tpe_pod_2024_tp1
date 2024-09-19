@@ -64,7 +64,6 @@ public class AdministrationClient {
 
                     final Doctor doctor = blockingStub.checkDoctor(StringValue.newBuilder(StringValue.of(doctorName)).build());
                     logger.info("Doctor {} ({}) is {}", doctor.getName(), doctor.getLevel(), doctor.getAvailability());
-
                 }
                 default -> logger.error("Invalid action: {}", action);
             }

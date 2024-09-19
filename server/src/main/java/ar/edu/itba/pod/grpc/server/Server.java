@@ -5,6 +5,7 @@ import ar.edu.itba.pod.grpc.server.repositories.PatientRepository;
 import ar.edu.itba.pod.grpc.server.repositories.RoomRepository;
 import ar.edu.itba.pod.grpc.server.servants.AdministrationServant;
 import ar.edu.itba.pod.grpc.server.servants.QueryServant;
+import ar.edu.itba.pod.grpc.server.servants.EmergencyCareServant;
 import ar.edu.itba.pod.grpc.server.servants.WaitingRoomServant;
 import io.grpc.ServerBuilder;
 import org.slf4j.Logger;
@@ -14,7 +15,7 @@ import java.io.IOException;
 
 public class Server {
 
-    private static Logger logger = LoggerFactory.getLogger(Server.class);
+    private static final Logger logger = LoggerFactory.getLogger(Server.class);
 
     public static void main(String[] args) throws InterruptedException, IOException {
         logger.info("Server Starting ...");
@@ -23,10 +24,12 @@ public class Server {
         final DoctorRepository doctorRepository = new DoctorRepository();
         final PatientRepository patientRepository = new PatientRepository();
 
-        int port = 50051;
+        int port = Integer.parseInt(System.getProperty("port", "50051"));
+
         io.grpc.Server server = ServerBuilder.forPort(port)
                 .addService(new AdministrationServant(roomRepository, doctorRepository))
                 .addService(new WaitingRoomServant(patientRepository))
+                .addService(new EmergencyCareServant(roomRepository, patientRepository, doctorRepository))
                 .addService(new QueryServant(roomRepository, patientRepository))
                 .build();
         server.start();

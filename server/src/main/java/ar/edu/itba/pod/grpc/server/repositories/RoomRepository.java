@@ -1,9 +1,13 @@
 package ar.edu.itba.pod.grpc.server.repositories;
 
+import ar.edu.itba.pod.grpc.hospital.Doctor;
+import ar.edu.itba.pod.grpc.hospital.Patient;
 import ar.edu.itba.pod.grpc.hospital.Room;
-import com.google.protobuf.Empty;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class RoomRepository {
 
@@ -14,6 +18,17 @@ public class RoomRepository {
         synchronized (rooms) {
             room = Room.newBuilder().setNumber(rooms.size() + 1).build();
             rooms.add(room);
+        }
+        return room;
+    }
+
+    public Room updateRoom(int number, Patient patient, Doctor doctor) {
+        Room room = null;
+        synchronized (rooms) {
+            if (rooms.removeIf(r -> r.getNumber() == number && !r.hasPatient() && !r.hasDoctor())) {
+                room = Room.newBuilder().setNumber(number).setPatient(patient).setDoctor(doctor).build();
+                rooms.add(room);
+            }
         }
         return room;
     }
