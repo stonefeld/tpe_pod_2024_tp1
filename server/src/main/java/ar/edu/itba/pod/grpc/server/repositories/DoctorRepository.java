@@ -3,16 +3,14 @@ package ar.edu.itba.pod.grpc.server.repositories;
 import ar.edu.itba.pod.grpc.hospital.Availability;
 import ar.edu.itba.pod.grpc.hospital.Doctor;
 
-import java.util.Comparator;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 public class DoctorRepository {
 
     private final SortedSet<Doctor> doctors = new TreeSet<>(Comparator.comparingInt(Doctor::getLevel).thenComparing(Doctor::getName));
 
     public Doctor addDoctor(String name, int level) {
-        Doctor doctor = Doctor.newBuilder().setName(name).setLevel(level).setAvailability(Availability.AVAILABLE).build();
+        Doctor doctor = Doctor.newBuilder().setName(name).setLevel(level).setAvailability(Availability.AVAILABILITY_AVAILABLE).build();
         synchronized (doctors) {
             doctors.add(doctor);
         }
@@ -21,11 +19,15 @@ public class DoctorRepository {
 
     // TODO: REVISE THIS BULLSHIT
     public Doctor setDoctorAvailability(String doctorName, Availability availability) {
-        Doctor doctor = Doctor.newBuilder().setName(doctorName).setAvailability(availability).build();
         synchronized (doctors) {
-            if (doctors.removeIf(d -> d.getName().equals(doctorName))) {
-                doctors.add(doctor);
-                return doctor;
+            Doctor.Builder doctorBuilder = Doctor.newBuilder().setName(doctorName).setAvailability(availability);
+            for (Doctor d : doctors) {
+                if (d.getName().equals(doctorName)) {
+                    Doctor doctor = doctorBuilder.setLevel(d.getLevel()).build();
+                    doctors.remove(d);
+                    doctors.add(doctor);
+                    return doctor;
+                }
             }
         }
         return null;
@@ -41,10 +43,16 @@ public class DoctorRepository {
 
     public Doctor getDoctorForLevel(int level) {
         for (Doctor d : doctors) {
-            if (d.getAvailability().equals(Availability.AVAILABLE) && d.getLevel() >= level)
+            if (d.getAvailability().equals(Availability.AVAILABILITY_AVAILABLE) && d.getLevel() >= level)
                 return d;
         }
         return null;
+    }
+
+    public List<Doctor> getAvailableDoctors() {
+        synchronized (doctors) {
+            return doctors.stream().filter(d -> d.getAvailability().equals(Availability.AVAILABILITY_AVAILABLE)).toList();
+        }
     }
 
 }

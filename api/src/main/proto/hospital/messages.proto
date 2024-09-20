@@ -3,14 +3,20 @@ syntax = "proto3";
 package hospital;
 
 option java_package = "ar.edu.itba.pod.grpc.hospital";
-option java_outer_classname = "HospitalServiceModel";
+//option java_outer_classname = "HospitalServiceModel";
 option java_multiple_files = true;
 
 enum Availability {
-  UNSPECIFIED = 0;
-  AVAILABLE = 1;
-  UNAVAILABLE = 2;
-  ATTENDING = 3;
+  AVAILABILITY_UNSPECIFIED = 0;
+  AVAILABILITY_AVAILABLE = 1;
+  AVAILABILITY_UNAVAILABLE = 2;
+  AVAILABILITY_ATTENDING = 3;
+}
+
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  STATUS_FREE = 1;
+  STATUS_OCCUPIED = 2;
 }
 
 message Doctor {
@@ -26,12 +32,23 @@ message Patient {
 
 message Room {
   uint32 number = 1;
-  Patient patient = 2;
-  Doctor doctor = 3;
+  Status status = 2;
+}
+
+message Rooms {
+  repeated Room rooms = 1;
 }
 
 message Treatment {
-  Patient patient = 1;
+  Room room = 1;
   Doctor doctor = 2;
-  Room room = 3;
+  Patient patient = 3;
+}
+
+message TreatmentRoom {
+  uint32 roomNumber = 1;
+}
+
+message Treatments {
+  repeated Treatment treatments = 1;
 }

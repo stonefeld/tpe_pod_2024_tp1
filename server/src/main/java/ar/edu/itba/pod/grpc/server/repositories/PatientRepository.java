@@ -16,6 +16,14 @@ public class PatientRepository {
         return patient;
     }
 
+    public Patient getNextPatient() {
+        for (Map.Entry<Integer, Queue<Patient>> entry : patients.entrySet()) {
+            if (!entry.getValue().isEmpty())
+                return entry.getValue().poll();
+        }
+        return null;
+    }
+
     public List<Patient> getPatients() {
         List<Patient> allPatients = new ArrayList<>();
         for (Queue<Patient> patientQueue : patients.values())
@@ -23,12 +31,20 @@ public class PatientRepository {
         return allPatients;
     }
 
-    public Patient getNextPatient() {
-        for (Map.Entry<Integer, Queue<Patient>> entry : patients.entrySet()) {
-            if (!entry.getValue().isEmpty())
-                return entry.getValue().poll();
+    public List<Patient> getFirstPatientFromEveryLevel() {
+        List<Patient> firstPatients = new ArrayList<>();
+        for (Queue<Patient> patientQueue : patients.values()) {
+            if (!patientQueue.isEmpty())
+                firstPatients.add(patientQueue.peek());
         }
-        return null;
+        return firstPatients;
+    }
+
+    public Patient attendPatient(Patient patient) {
+        synchronized (patients) {
+            patients.get(patient.getLevel()).removeIf(p -> patient.getName().equals(p.getName()));
+        }
+        return patient;
     }
 
 }

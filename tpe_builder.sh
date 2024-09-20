@@ -18,7 +18,7 @@ while getopts 'cs' flag; do
   esac
 done
 
-if [ "$CLIENT" = true ] ; then
+if [ "$CLIENT" = true ]; then
   echo "Building client ..."
   mvn clean package -pl client -am -DskipTests 1>&2
 
@@ -33,7 +33,7 @@ if [ "$CLIENT" = true ] ; then
   mv client/target/tpe1-g2-client-1.0-SNAPSHOT bin/client
 fi
 
-if [ "$SERVER" = true ] ; then
+if [ "$SERVER" = true ]; then
   echo "Building server ..."
   mvn clean package -pl server -am -DskipTests 1>&2
 

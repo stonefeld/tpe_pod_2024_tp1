@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 import "hospital/messages.proto";
-import "google/protobuf/wrappers.proto";
 import "google/protobuf/empty.proto";
 
 package hospital.query;
@@ -13,24 +12,16 @@ option java_multiple_files = true;
 service QueryService {
 
   // List of current rooms with their patients and doctors if not empty
-  rpc QueryRooms(google.protobuf.Empty) returns (Rooms);
+  rpc QueryRooms(google.protobuf.Empty) returns (Treatments);
 
   // List of patients waiting for a room while dying
   rpc QueryWaitingRoom(google.protobuf.Empty) returns (WaitingPatients);
 
   // List of all treatments
-  rpc QueryCares(Room) returns (Treatments);
+  rpc QueryCares(TreatmentRoom) returns (Treatments);
 
-}
-
-message Rooms {
-  repeated Room rooms = 1;
 }
 
 message WaitingPatients {
   repeated Patient patients = 1;
-}
-
-message Treatments {
-  repeated Treatment treatments = 1;
 }

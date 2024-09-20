@@ -1,14 +1,14 @@
 package ar.edu.itba.pod.grpc.client;
 
+import ar.edu.itba.pod.grpc.client.utils.ChannelBuilder;
 import ar.edu.itba.pod.grpc.hospital.Patient;
-import ar.edu.itba.pod.grpc.hospital.Room;
+import ar.edu.itba.pod.grpc.hospital.Treatment;
+import ar.edu.itba.pod.grpc.hospital.Treatments;
 import ar.edu.itba.pod.grpc.hospital.query.QueryServiceGrpc;
 import ar.edu.itba.pod.grpc.hospital.query.QueryServiceGrpc.QueryServiceBlockingStub;
-import ar.edu.itba.pod.grpc.hospital.query.Rooms;
 import ar.edu.itba.pod.grpc.hospital.query.WaitingPatients;
 import com.google.protobuf.Empty;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,18 +22,12 @@ import java.util.concurrent.TimeUnit;
 
 public class QueryClient {
 
-    private static Logger logger = LoggerFactory.getLogger(QueryClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(QueryClient.class);
 
     public static void main(String[] args) throws InterruptedException {
-        final String[] serverAddress = System.getProperty("serverAddress").split(":");
-        final String ip = serverAddress[0];
-        final int port = Integer.parseInt(serverAddress[1]);
-
         logger.info("tpe1-g2 Client Starting ...");
         logger.info("grpc-com-patterns Client Starting ...");
-        ManagedChannel channel = ManagedChannelBuilder.forAddress(ip, port)
-                .usePlaintext()
-                .build();
+        ManagedChannel channel = ChannelBuilder.buildChannel();
 
         final String action = System.getProperty("action");
         final String fileName;
@@ -44,10 +38,10 @@ public class QueryClient {
             switch (action) {
                 case "queryRooms" -> {
                     fileName = System.getProperty("outPath");
-                    final Rooms rooms = blockingStub.queryRooms(Empty.newBuilder().build());
+                    final Treatments treatments = blockingStub.queryRooms(Empty.newBuilder().build());
 
                     try {
-                        writeRoomsToCSV(fileName, rooms);
+                        writeRoomsToCSV(fileName, treatments);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -69,19 +63,19 @@ public class QueryClient {
         }
     }
 
-    public static void writeRoomsToCSV(String fileName, Rooms rooms) throws IOException {
+    public static void writeRoomsToCSV(String fileName, Treatments treatments) throws IOException {
         List<String> lines = new ArrayList<>();
 
         lines.add("Room,Status,Patient,Doctor");
 
-        for (Room room : rooms.getRoomsList()) {
-            String roomNumber = String.valueOf(room.getNumber());
-            String status = (!room.hasPatient() && !room.hasDoctor()) ? "Free" : "Occupied";
-            String patient = room.hasPatient()
-                    ? room.getPatient().getName() + " (" + room.getPatient().getLevel() + ")"
+        for (Treatment treatment : treatments.getTreatmentsList()) {
+            String roomNumber = String.valueOf(treatment.getRoom().getNumber());
+            String status = (!treatment.hasPatient() && !treatment.hasDoctor()) ? "Free" : "Occupied";
+            String patient = treatment.hasPatient()
+                    ? treatment.getPatient().getName() + " (" + treatment.getPatient().getLevel() + ")"
                     : "";
-            String doctor = room.hasDoctor()
-                    ? room.getDoctor().getName() + " (" + room.getDoctor().getLevel() + ")"
+            String doctor = treatment.hasDoctor()
+                    ? treatment.getDoctor().getName() + " (" + treatment.getDoctor().getLevel() + ")"
                     : "";
 
             String csvLine = String.join(",", roomNumber, status, patient, doctor);
