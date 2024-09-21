@@ -1,6 +1,8 @@
 package ar.edu.itba.pod.grpc.server.repositories;
 
 import ar.edu.itba.pod.grpc.hospital.Patient;
+import ar.edu.itba.pod.grpc.hospital.waitingroom.PatientQueueInfo;
+
 
 import java.util.*;
 
@@ -47,4 +49,39 @@ public class PatientRepository {
         return patient;
     }
 
-}
+    public Patient updateLevel(String name, int level){
+        Patient patient = Patient.newBuilder().setName(name).setLevel(level).build();
+        synchronized (patients) {
+            for (Queue<Patient> patientQueue : patients.values()) {
+                for (Patient p : patientQueue) {
+                    if (p.getName().equals(name)) {
+                        patientQueue.remove(p);
+                        patients.computeIfAbsent(level, k -> new LinkedList<>()).add(patient);
+                        return patient;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    public PatientQueueInfo checkPatient(String name) {
+
+        synchronized (patients) {
+            int count = 0;
+
+
+            for (Map.Entry<Integer, Queue<Patient>> entry : patients.entrySet()) {
+                Queue<Patient> queue = entry.getValue();
+
+                for (Patient patient : queue) {
+                    if (patient.getName().equals(name)) {
+
+                        return PatientQueueInfo.newBuilder().setPatient(patient).setQueueLength(count).build();
+                    }
+                    count++;
+                }
+            }
+        }
+        return null;
+    }
+   }

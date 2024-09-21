@@ -2,8 +2,10 @@ package ar.edu.itba.pod.grpc.client;
 
 import ar.edu.itba.pod.grpc.client.utils.ChannelBuilder;
 import ar.edu.itba.pod.grpc.hospital.Patient;
+import ar.edu.itba.pod.grpc.hospital.waitingroom.PatientQueueInfo;
 import ar.edu.itba.pod.grpc.hospital.waitingroom.WaitingRoomServiceGrpc;
 import ar.edu.itba.pod.grpc.hospital.waitingroom.WaitingRoomServiceGrpc.WaitingRoomServiceBlockingStub;
+import com.google.protobuf.StringValue;
 import io.grpc.ManagedChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,19 @@ public class WaitingRoomClient {
 
                     final Patient patient = blockingStub.addPatient(Patient.newBuilder().setName(name).setLevel(level).build());
                     System.out.printf("Patient %s (%d) is in the waiting room\n", patient.getName(), patient.getLevel());
+                }
+                case "updateLevel" -> {
+                    name = System.getProperty("patient");
+                    level = Integer.parseInt(System.getProperty("level"));
+
+                    final Patient patient = blockingStub.updateLevel(Patient.newBuilder().setName(name).setLevel(level).build());
+                    System.out.printf("Patient %s (%d) is in the waiting room\n", patient.getName(), patient.getLevel());
+                }
+                case "checkPatient" -> {
+                    name = System.getProperty("patient");
+
+                    final PatientQueueInfo patientQueueInfo = blockingStub.checkPatient(StringValue.newBuilder().setValue(name).build());
+                    System.out.printf("Patient %s (%d) is in the waiting room with %d patients ahead\n", patientQueueInfo.getPatient().getName(), patientQueueInfo.getPatient().getLevel(), patientQueueInfo.getQueueLength());
                 }
                 default -> logger.error("Invalid action: {}", action);
             }
