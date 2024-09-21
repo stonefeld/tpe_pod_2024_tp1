@@ -31,4 +31,10 @@ public class QueryServant extends QueryServiceImplBase {
         responseObserver.onCompleted();
     }
 
+    @Override
+    public void queryCares(Empty request, StreamObserver<Treatments> responseObserver) {
+        responseObserver.onNext(Treatments.newBuilder().addAllTreatments(treatmentRepository.getCompletedTreatments()).build());
+        responseObserver.onCompleted();
+    }
+
 }

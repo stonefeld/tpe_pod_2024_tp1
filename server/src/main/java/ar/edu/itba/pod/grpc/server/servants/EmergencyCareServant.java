@@ -2,6 +2,7 @@ package ar.edu.itba.pod.grpc.server.servants;
 
 import ar.edu.itba.pod.grpc.hospital.*;
 import ar.edu.itba.pod.grpc.hospital.emergencycare.EmergencyCareServiceGrpc.EmergencyCareServiceImplBase;
+import ar.edu.itba.pod.grpc.hospital.emergencycare.TreatmentEnding;
 import ar.edu.itba.pod.grpc.server.repositories.DoctorRepository;
 import ar.edu.itba.pod.grpc.server.repositories.PatientRepository;
 import ar.edu.itba.pod.grpc.server.repositories.RoomRepository;
@@ -46,13 +47,15 @@ public class EmergencyCareServant extends EmergencyCareServiceImplBase {
         responseObserver.onCompleted();
     }
 
-//    @Override
-//    public void dischargePatient(TreatmentEnding request, StreamObserver<Room> responseObserver) {
+    @Override
+    public void dischargePatient(TreatmentEnding request, StreamObserver<Treatment> responseObserver) {
 //         TODO: chequear los parametros
-//
-//        Room room = roomRepository.getRoom();
-//
-//    }
+
+        Treatment treatment = treatmentRepository.dischargePatient(request.getRoomNumber(), request.getPatientName(), request.getDoctorName());
+        responseObserver.onNext(treatment);
+        responseObserver.onCompleted();
+
+    }
 
     private Treatment createTreatment(Room room) {
         // TODO: se re coge la concurrencia

@@ -16,14 +16,30 @@ public class TreatmentRepository {
         return treatment;
     }
 
-    public Treatment completeTreatment(Treatment treatment) {
+    public Treatment dischargePatient(int roomNumber, String patientName, String doctorName) {
+        Treatment treatment;
         synchronized (currentTreatments) {
-            currentTreatments.removeIf(t -> t.getRoom().getNumber() == treatment.getRoom().getNumber());
+            treatment = currentTreatments.stream()
+                    .filter(t -> t.getRoom().getNumber() == roomNumber)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Room not found"));
         }
-        synchronized (completedTreatments) {
-            completedTreatments.add(treatment);
+
+        if (treatment.hasPatient() && treatment.getPatient().getName().equals(patientName)) {
+            if (treatment.hasDoctor() && treatment.getDoctor().getName().equals(doctorName)) {
+                synchronized (currentTreatments) {
+                    currentTreatments.remove(treatment);
+                }
+                synchronized (completedTreatments) {
+                    completedTreatments.add(treatment);
+                }
+                return treatment;
+            } else {
+                throw new IllegalArgumentException("Doctor not found");
+            }
+        } else {
+            throw new IllegalArgumentException("Patient not found");
         }
-        return treatment;
     }
 
     public List<Treatment> getCurrentTreatments() {

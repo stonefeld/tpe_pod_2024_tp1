@@ -5,6 +5,7 @@ import ar.edu.itba.pod.grpc.hospital.Status;
 import ar.edu.itba.pod.grpc.hospital.Treatment;
 import ar.edu.itba.pod.grpc.hospital.TreatmentRoom;
 import ar.edu.itba.pod.grpc.hospital.emergencycare.EmergencyCareServiceGrpc;
+import ar.edu.itba.pod.grpc.hospital.emergencycare.TreatmentEnding;
 import com.google.protobuf.Empty;
 import io.grpc.ManagedChannel;
 import org.slf4j.Logger;
@@ -57,6 +58,24 @@ public class EmergencyCareClient {
                             System.out.printf("Room #%d remains Occupied\n", treatment.getRoom().getNumber());
                         }
                     }
+                }
+                case "dischargePatient" -> {
+                    roomNumber = Integer.parseInt(System.getProperty("room"));
+                    patientName = System.getProperty("patient");
+                    doctorName = System.getProperty("doctor");
+
+                    final Treatment treatment = blockingStub.dischargePatient(TreatmentEnding.newBuilder()
+                            .setRoomNumber(roomNumber)
+                            .setPatientName(patientName)
+                            .setDoctorName(doctorName)
+                            .build());
+
+                    System.out.printf("Patient %s (%d) has been discharged from Doctor %s (%d) and the Room #%d is now Free\n",
+                            treatment.getPatient().getName(),
+                            treatment.getPatient().getLevel(),
+                            treatment.getDoctor().getName(),
+                            treatment.getDoctor().getLevel(),
+                            treatment.getRoom().getNumber());
                 }
                 default -> logger.error("Invalid action: {}", action);
             }

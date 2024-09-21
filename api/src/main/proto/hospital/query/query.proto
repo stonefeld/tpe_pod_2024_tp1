@@ -18,7 +18,7 @@ service QueryService {
   rpc QueryWaitingRoom(google.protobuf.Empty) returns (WaitingPatients);
 
   // List of all treatments
-  rpc QueryCares(TreatmentRoom) returns (Treatments);
+  rpc QueryCares(google.protobuf.Empty) returns (Treatments);
 
 }
 
