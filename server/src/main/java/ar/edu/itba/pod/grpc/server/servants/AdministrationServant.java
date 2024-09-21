@@ -5,7 +5,10 @@ import ar.edu.itba.pod.grpc.hospital.Room;
 import ar.edu.itba.pod.grpc.hospital.administration.AdministrationServiceGrpc.AdministrationServiceImplBase;
 import ar.edu.itba.pod.grpc.hospital.administration.DoctorAvailabilityUpdate;
 import ar.edu.itba.pod.grpc.hospital.administration.DoctorCreation;
+import ar.edu.itba.pod.grpc.hospital.doctorpager.Event;
+import ar.edu.itba.pod.grpc.hospital.doctorpager.Type;
 import ar.edu.itba.pod.grpc.server.repositories.DoctorRepository;
+import ar.edu.itba.pod.grpc.server.repositories.EventRepository;
 import ar.edu.itba.pod.grpc.server.repositories.RoomRepository;
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
@@ -15,10 +18,12 @@ public class AdministrationServant extends AdministrationServiceImplBase {
 
     private final RoomRepository roomRepository;
     private final DoctorRepository doctorRepository;
+    private final EventRepository eventRepository;
 
-    public AdministrationServant(RoomRepository roomRepository, DoctorRepository doctorRepository) {
+    public AdministrationServant(RoomRepository roomRepository, DoctorRepository doctorRepository, EventRepository eventRepository) {
         this.roomRepository = roomRepository;
         this.doctorRepository = doctorRepository;
+        this.eventRepository = eventRepository;
     }
 
     @Override
@@ -35,7 +40,10 @@ public class AdministrationServant extends AdministrationServiceImplBase {
 
     @Override
     public void setDoctor(DoctorAvailabilityUpdate request, StreamObserver<Doctor> responseObserver) {
-        responseObserver.onNext(doctorRepository.setDoctorAvailability(request.getDoctorName(), request.getAvailability()));
+        Doctor doctor = doctorRepository.setDoctorAvailability(request.getDoctorName(), request.getAvailability());
+        // TODO: chequear que se haya hecho correcto
+        eventRepository.addEvent(doctor.getName(), Event.newBuilder().setType(Type.AVAILABILITY).build());
+        responseObserver.onNext(doctor);
         responseObserver.onCompleted();
     }
 

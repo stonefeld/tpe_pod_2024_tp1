@@ -14,8 +14,17 @@ service DoctorPagerService {
   rpc Register(DoctorRegistration) returns (stream Event);
 
   // Unregister from pager
-  rpc Unregister(DoctorRegistration) returns (Doctor);
+  rpc Unregister(DoctorRegistration) returns (Event);
 
+}
+
+enum Type {
+  UNSPECIFIED = 0;
+  REGISTER = 1;
+  UNREGISTER = 2;
+  AVAILABILITY = 3;
+  TREATMENT = 4;
+  DISCHARGE = 5;
 }
 
 message DoctorRegistration {
@@ -23,13 +32,7 @@ message DoctorRegistration {
 }
 
 message Event {
-  type type = 1;
-}
-
-enum type {
-  UNSPECIFIED = 0;
-  REGISTER = 1;
-  AVAILABILITY = 2;
-  TREATMENT = 3;
-  DISCHARGE = 4;
+  Type type = 1;
+  Doctor doctor = 2;
+  Treatment treatment = 3;
 }

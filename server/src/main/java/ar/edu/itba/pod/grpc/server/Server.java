@@ -1,18 +1,13 @@
 package ar.edu.itba.pod.grpc.server;
 
-import ar.edu.itba.pod.grpc.server.repositories.DoctorRepository;
-import ar.edu.itba.pod.grpc.server.repositories.PatientRepository;
-import ar.edu.itba.pod.grpc.server.repositories.RoomRepository;
-import ar.edu.itba.pod.grpc.server.repositories.TreatmentRepository;
-import ar.edu.itba.pod.grpc.server.servants.AdministrationServant;
-import ar.edu.itba.pod.grpc.server.servants.QueryServant;
-import ar.edu.itba.pod.grpc.server.servants.EmergencyCareServant;
-import ar.edu.itba.pod.grpc.server.servants.WaitingRoomServant;
+import ar.edu.itba.pod.grpc.server.repositories.*;
+import ar.edu.itba.pod.grpc.server.servants.*;
 import io.grpc.ServerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 public class Server {
 
@@ -25,13 +20,15 @@ public class Server {
         final DoctorRepository doctorRepository = new DoctorRepository();
         final PatientRepository patientRepository = new PatientRepository();
         final TreatmentRepository treatmentRepository = new TreatmentRepository();
+        final EventRepository eventRepository = new EventRepository();
 
         int port = Integer.parseInt(System.getProperty("port", "50051"));
 
         io.grpc.Server server = ServerBuilder.forPort(port)
-                .addService(new AdministrationServant(roomRepository, doctorRepository))
+                .addService(new AdministrationServant(roomRepository, doctorRepository, eventRepository))
                 .addService(new WaitingRoomServant(patientRepository))
-                .addService(new EmergencyCareServant(roomRepository, patientRepository, doctorRepository, treatmentRepository))
+                .addService(new EmergencyCareServant(roomRepository, patientRepository, doctorRepository, treatmentRepository, eventRepository))
+                .addService(new DoctorPagerServant(eventRepository))
                 .addService(new QueryServant(treatmentRepository, patientRepository))
                 .build();
         server.start();

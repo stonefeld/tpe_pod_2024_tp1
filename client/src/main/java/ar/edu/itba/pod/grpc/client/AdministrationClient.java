@@ -36,7 +36,6 @@ public class AdministrationClient {
             switch (action) {
                 case "addRoom" -> {
                     final Room room = blockingStub.addRoom(Empty.newBuilder().build());
-
                     System.out.printf("Room #%d added successfully\n", room.getNumber());
                 }
                 case "addDoctor" -> {
@@ -48,7 +47,7 @@ public class AdministrationClient {
                 }
                 case "setDoctor" -> {
                     doctorName = System.getProperty("doctor");
-                    availability = Availability.valueOf(System.getProperty("availability"));
+                    availability = Availability.valueOf("AVAILABILITY_" + System.getProperty("availability").toUpperCase());
 
                     final Doctor doctor = blockingStub.setDoctor(DoctorAvailabilityUpdate.newBuilder().setDoctorName(doctorName).setAvailability(availability).build());
                     System.out.printf("Doctor %s (%d) is %s\n", doctor.getName(), doctor.getLevel(), doctor.getAvailability());
@@ -56,7 +55,7 @@ public class AdministrationClient {
                 case "checkDoctor" -> {
                     doctorName = System.getProperty("doctor");
 
-                    final Doctor doctor = blockingStub.checkDoctor(StringValue.newBuilder(StringValue.of(doctorName)).build());
+                    final Doctor doctor = blockingStub.checkDoctor(StringValue.newBuilder().setValue(doctorName).build());
                     System.out.printf("Doctor %s (%d) is %s\n", doctor.getName(), doctor.getLevel(), doctor.getAvailability());
                 }
                 default -> logger.error("Invalid action: {}", action);

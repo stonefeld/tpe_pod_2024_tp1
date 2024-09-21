@@ -4,6 +4,7 @@ import ar.edu.itba.pod.grpc.client.utils.ChannelBuilder;
 import ar.edu.itba.pod.grpc.hospital.Status;
 import ar.edu.itba.pod.grpc.hospital.Treatment;
 import ar.edu.itba.pod.grpc.hospital.TreatmentRoom;
+import ar.edu.itba.pod.grpc.hospital.Treatments;
 import ar.edu.itba.pod.grpc.hospital.emergencycare.EmergencyCareServiceGrpc;
 import ar.edu.itba.pod.grpc.hospital.emergencycare.TreatmentEnding;
 import com.google.protobuf.Empty;
@@ -15,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 public class EmergencyCareClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(AdministrationClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(EmergencyCareClient.class);
 
     public static void main(String[] args) throws InterruptedException {
         logger.info("tpe1-g2 Client Starting ...");
@@ -42,7 +43,7 @@ public class EmergencyCareClient {
                             treatment.getRoom().getNumber());
                 }
                 case "careAllPatients" -> {
-                    final var treatments = blockingStub.careAllPatients(Empty.newBuilder().build());
+                    final Treatments treatments = blockingStub.careAllPatients(Empty.newBuilder().build());
 
                     for (Treatment treatment : treatments.getTreatmentsList()) {
                         if (treatment.getRoom().getStatus().equals(Status.STATUS_FREE)) {

@@ -1,12 +1,11 @@
 package ar.edu.itba.pod.grpc.server.servants;
 
 import ar.edu.itba.pod.grpc.hospital.*;
+import ar.edu.itba.pod.grpc.hospital.doctorpager.Event;
+import ar.edu.itba.pod.grpc.hospital.doctorpager.Type;
 import ar.edu.itba.pod.grpc.hospital.emergencycare.EmergencyCareServiceGrpc.EmergencyCareServiceImplBase;
 import ar.edu.itba.pod.grpc.hospital.emergencycare.TreatmentEnding;
-import ar.edu.itba.pod.grpc.server.repositories.DoctorRepository;
-import ar.edu.itba.pod.grpc.server.repositories.PatientRepository;
-import ar.edu.itba.pod.grpc.server.repositories.RoomRepository;
-import ar.edu.itba.pod.grpc.server.repositories.TreatmentRepository;
+import ar.edu.itba.pod.grpc.server.repositories.*;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 
@@ -19,12 +18,14 @@ public class EmergencyCareServant extends EmergencyCareServiceImplBase {
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final TreatmentRepository treatmentRepository;
+    private final EventRepository eventRepository;
 
-    public EmergencyCareServant(RoomRepository roomRepository, PatientRepository patientRepository, DoctorRepository doctorRepository, TreatmentRepository treatmentRepository) {
+    public EmergencyCareServant(RoomRepository roomRepository, PatientRepository patientRepository, DoctorRepository doctorRepository, TreatmentRepository treatmentRepository, EventRepository eventRepository) {
         this.roomRepository = roomRepository;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
         this.treatmentRepository = treatmentRepository;
+        this.eventRepository = eventRepository;
     }
 
     @Override
@@ -52,9 +53,11 @@ public class EmergencyCareServant extends EmergencyCareServiceImplBase {
 //         TODO: chequear los parametros
 
         Treatment treatment = treatmentRepository.dischargePatient(request.getRoomNumber(), request.getPatientName(), request.getDoctorName());
+        roomRepository.setRoomStatus(treatment.getRoom().getNumber(), Status.STATUS_FREE);
+        doctorRepository.setDoctorAvailability(treatment.getDoctor().getName(), Availability.AVAILABILITY_AVAILABLE);
+        eventRepository.addEvent(treatment.getDoctor().getName(), Event.newBuilder().setType(Type.DISCHARGE).build());
         responseObserver.onNext(treatment);
         responseObserver.onCompleted();
-
     }
 
     private Treatment createTreatment(Room room) {
@@ -72,6 +75,7 @@ public class EmergencyCareServant extends EmergencyCareServiceImplBase {
                                 .setPatient(patientRepository.attendPatient(p))
                                 .build();
                         treatmentRepository.addTreatment(treatment);
+                        eventRepository.addEvent(d.getName(), Event.newBuilder().setType(Type.TREATMENT).build());
                         return treatment;
                     }
                 }
