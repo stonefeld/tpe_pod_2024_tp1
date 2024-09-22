@@ -2,6 +2,9 @@ package ar.edu.itba.pod.grpc.server.repositories;
 
 import ar.edu.itba.pod.grpc.hospital.Patient;
 import ar.edu.itba.pod.grpc.hospital.waitingroom.PatientQueueInfo;
+import ar.edu.itba.pod.grpc.server.exceptions.InvalidLevelException;
+import ar.edu.itba.pod.grpc.server.exceptions.PatientAlreadyExistsException;
+import ar.edu.itba.pod.grpc.server.exceptions.PatientDoesNotExistException;
 
 
 import java.util.*;
@@ -9,8 +12,15 @@ import java.util.*;
 public class PatientRepository {
 
     private final SortedMap<Integer, Queue<Patient>> patients = new TreeMap<>(Comparator.reverseOrder());
+    private final Set<String> historicPatients = new HashSet<>();
 
     public Patient addPatient(String name, int level) {
+        if (historicPatients.contains(name))
+            throw new PatientAlreadyExistsException();
+        if (level < 1 || level > 5)
+            throw new InvalidLevelException();
+
+        historicPatients.add(name);
         Patient patient = Patient.newBuilder().setName(name).setLevel(level).build();
         synchronized (patients) {
             patients.computeIfAbsent(level, k -> new LinkedList<>()).add(patient);
@@ -42,6 +52,9 @@ public class PatientRepository {
     }
 
     public Patient updateLevel(String name, int level) {
+        if (level < 1 || level > 5)
+            throw new InvalidLevelException();
+
         Patient patient = Patient.newBuilder().setName(name).setLevel(level).build();
         synchronized (patients) {
             for (Queue<Patient> patientQueue : patients.values()) {
@@ -54,27 +67,21 @@ public class PatientRepository {
                 }
             }
         }
-        return null;
+        throw new PatientDoesNotExistException();
     }
 
     public PatientQueueInfo checkPatient(String name) {
-
         synchronized (patients) {
             int count = 0;
-
-
             for (Map.Entry<Integer, Queue<Patient>> entry : patients.entrySet()) {
                 Queue<Patient> queue = entry.getValue();
-
                 for (Patient patient : queue) {
-                    if (patient.getName().equals(name)) {
-
+                    if (patient.getName().equals(name))
                         return PatientQueueInfo.newBuilder().setPatient(patient).setQueueLength(count).build();
-                    }
                     count++;
                 }
             }
         }
-        return null;
+        throw new PatientDoesNotExistException();
     }
 }
