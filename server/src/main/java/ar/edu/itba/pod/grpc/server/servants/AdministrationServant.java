@@ -7,11 +7,14 @@ import ar.edu.itba.pod.grpc.hospital.administration.DoctorAvailabilityUpdate;
 import ar.edu.itba.pod.grpc.hospital.administration.DoctorCreation;
 import ar.edu.itba.pod.grpc.hospital.doctorpager.Event;
 import ar.edu.itba.pod.grpc.hospital.doctorpager.Type;
+import ar.edu.itba.pod.grpc.server.exceptions.DoctorAlreadyExistsException;
+import ar.edu.itba.pod.grpc.server.exceptions.InvalidLevelException;
 import ar.edu.itba.pod.grpc.server.repositories.DoctorRepository;
 import ar.edu.itba.pod.grpc.server.repositories.EventRepository;
 import ar.edu.itba.pod.grpc.server.repositories.RoomRepository;
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 public class AdministrationServant extends AdministrationServiceImplBase {
@@ -34,8 +37,14 @@ public class AdministrationServant extends AdministrationServiceImplBase {
 
     @Override
     public void addDoctor(DoctorCreation request, StreamObserver<Doctor> responseObserver) {
-        responseObserver.onNext(doctorRepository.addDoctor(request.getName(), request.getLevel()));
-        responseObserver.onCompleted();
+        try {
+            responseObserver.onNext(doctorRepository.addDoctor(request.getName(), request.getLevel()));
+            responseObserver.onCompleted();
+        } catch (InvalidLevelException e) {
+            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Invalid level").asRuntimeException());
+        } catch (DoctorAlreadyExistsException e) {
+            responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Doctor already exists").asRuntimeException());
+        }
     }
 
     @Override

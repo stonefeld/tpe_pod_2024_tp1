@@ -2,6 +2,8 @@ package ar.edu.itba.pod.grpc.server.repositories;
 
 import ar.edu.itba.pod.grpc.hospital.Availability;
 import ar.edu.itba.pod.grpc.hospital.Doctor;
+import ar.edu.itba.pod.grpc.server.exceptions.DoctorAlreadyExistsException;
+import ar.edu.itba.pod.grpc.server.exceptions.InvalidLevelException;
 
 import java.util.*;
 
@@ -10,6 +12,11 @@ public class DoctorRepository {
     private final SortedSet<Doctor> doctors = new TreeSet<>(Comparator.comparingInt(Doctor::getLevel).thenComparing(Doctor::getName));
 
     public Doctor addDoctor(String name, int level) {
+        if (doctorExists(name))
+            throw new DoctorAlreadyExistsException();
+        if (level < 1 || level > 5)
+            throw new InvalidLevelException();
+
         Doctor doctor = Doctor.newBuilder().setName(name).setLevel(level).setAvailability(Availability.AVAILABILITY_AVAILABLE).build();
         synchronized (doctors) {
             doctors.add(doctor);
@@ -53,6 +60,14 @@ public class DoctorRepository {
         synchronized (doctors) {
             return doctors.stream().filter(d -> d.getAvailability().equals(Availability.AVAILABILITY_AVAILABLE)).toList();
         }
+    }
+
+    private boolean doctorExists(String doctorName) {
+        for (Doctor d : doctors) {
+            if (d.getName().equals(doctorName))
+                return true;
+        }
+        return false;
     }
 
 }

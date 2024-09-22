@@ -11,6 +11,7 @@ import ar.edu.itba.pod.grpc.hospital.administration.DoctorCreation;
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
 import io.grpc.ManagedChannel;
+import io.grpc.StatusRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,11 +38,23 @@ public class AdministrationClient {
                     System.out.printf("Room #%d added successfully\n", room.getNumber());
                 }
                 case "addDoctor" -> {
-                    doctorName = System.getProperty("doctor");
-                    levelNumber = Integer.parseInt(System.getProperty("level"));
+                    doctorName = System.getProperty("doctor", "");
+                    if (doctorName.isEmpty()) {
+                        System.out.println("Doctor name is required");
+                        return;
+                    }
+                    levelNumber = Integer.parseInt(System.getProperty("level", "0"));
+                    if (levelNumber == 0) {
+                        System.out.println("Doctor level is required");
+                        return;
+                    }
 
-                    final Doctor doctor = blockingStub.addDoctor(DoctorCreation.newBuilder().setName(doctorName).setLevel(levelNumber).build());
-                    System.out.printf("Doctor %s (%d) added successfully\n", doctor.getName(), doctor.getLevel());
+                    try {
+                        final Doctor doctor = blockingStub.addDoctor(DoctorCreation.newBuilder().setName(doctorName).setLevel(levelNumber).build());
+                        System.out.printf("Doctor %s (%d) added successfully\n", doctor.getName(), doctor.getLevel());
+                    } catch (StatusRuntimeException e) {
+                        System.out.println(e.getStatus().getDescription());
+                    }
                 }
                 case "setDoctor" -> {
                     doctorName = System.getProperty("doctor");

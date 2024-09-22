@@ -20,6 +20,7 @@ public class WaitingRoomServant extends WaitingRoomServiceImplBase {
         responseObserver.onNext(patientRepository.addPatient(request.getName(), request.getLevel()));
         responseObserver.onCompleted();
     }
+
     @Override
     public void updateLevel(Patient request, StreamObserver<Patient> responseObserver) {
         responseObserver.onNext(patientRepository.updateLevel(request.getName(), request.getLevel()));

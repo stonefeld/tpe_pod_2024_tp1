@@ -18,14 +18,6 @@ public class PatientRepository {
         return patient;
     }
 
-    public Patient getNextPatient() {
-        for (Map.Entry<Integer, Queue<Patient>> entry : patients.entrySet()) {
-            if (!entry.getValue().isEmpty())
-                return entry.getValue().poll();
-        }
-        return null;
-    }
-
     public List<Patient> getPatients() {
         List<Patient> allPatients = new ArrayList<>();
         for (Queue<Patient> patientQueue : patients.values())
@@ -49,7 +41,7 @@ public class PatientRepository {
         return patient;
     }
 
-    public Patient updateLevel(String name, int level){
+    public Patient updateLevel(String name, int level) {
         Patient patient = Patient.newBuilder().setName(name).setLevel(level).build();
         synchronized (patients) {
             for (Queue<Patient> patientQueue : patients.values()) {
@@ -64,6 +56,7 @@ public class PatientRepository {
         }
         return null;
     }
+
     public PatientQueueInfo checkPatient(String name) {
 
         synchronized (patients) {
@@ -84,4 +77,4 @@ public class PatientRepository {
         }
         return null;
     }
-   }
+}
