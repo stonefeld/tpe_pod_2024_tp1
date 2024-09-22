@@ -25,7 +25,7 @@ public class AdministrationClient {
         ManagedChannel channel = ChannelBuilder.buildChannel();
 
         final String action = System.getProperty("action");
-        final String doctorName;
+        final String doctorName = System.getProperty("doctor", "");
         final int levelNumber;
         final Availability availability;
 
@@ -38,7 +38,6 @@ public class AdministrationClient {
                     System.out.printf("Room #%d added successfully\n", room.getNumber());
                 }
                 case "addDoctor" -> {
-                    doctorName = System.getProperty("doctor", "");
                     if (doctorName.isEmpty()) {
                         System.out.println("Doctor name is required");
                         return;
@@ -57,17 +56,31 @@ public class AdministrationClient {
                     }
                 }
                 case "setDoctor" -> {
-                    doctorName = System.getProperty("doctor");
+                    if (doctorName.isEmpty()) {
+                        System.out.println("Doctor name is required");
+                        return;
+                    }
                     availability = Availability.valueOf("AVAILABILITY_" + System.getProperty("availability").toUpperCase());
 
-                    final Doctor doctor = blockingStub.setDoctor(DoctorAvailabilityUpdate.newBuilder().setDoctorName(doctorName).setAvailability(availability).build());
-                    System.out.printf("Doctor %s (%d) is %s\n", doctor.getName(), doctor.getLevel(), doctor.getAvailability());
+                    try {
+                        final Doctor doctor = blockingStub.setDoctor(DoctorAvailabilityUpdate.newBuilder().setDoctorName(doctorName).setAvailability(availability).build());
+                        System.out.printf("Doctor %s (%d) is %s\n", doctor.getName(), doctor.getLevel(), doctor.getAvailability());
+                    } catch (StatusRuntimeException e) {
+                        System.out.println(e.getStatus().getDescription());
+                    }
                 }
                 case "checkDoctor" -> {
-                    doctorName = System.getProperty("doctor");
+                    if (doctorName.isEmpty()) {
+                        System.out.println("Doctor name is required");
+                        return;
+                    }
 
-                    final Doctor doctor = blockingStub.checkDoctor(StringValue.newBuilder().setValue(doctorName).build());
-                    System.out.printf("Doctor %s (%d) is %s\n", doctor.getName(), doctor.getLevel(), doctor.getAvailability());
+                    try {
+                        final Doctor doctor = blockingStub.checkDoctor(StringValue.newBuilder().setValue(doctorName).build());
+                        System.out.printf("Doctor %s (%d) is %s\n", doctor.getName(), doctor.getLevel(), doctor.getAvailability());
+                    } catch (StatusRuntimeException e) {
+                        System.out.println(e.getStatus().getDescription());
+                    }
                 }
                 default -> logger.error("Invalid action: {}", action);
             }

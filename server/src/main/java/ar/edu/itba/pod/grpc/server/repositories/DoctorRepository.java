@@ -3,9 +3,13 @@ package ar.edu.itba.pod.grpc.server.repositories;
 import ar.edu.itba.pod.grpc.hospital.Availability;
 import ar.edu.itba.pod.grpc.hospital.Doctor;
 import ar.edu.itba.pod.grpc.server.exceptions.DoctorAlreadyExistsException;
+import ar.edu.itba.pod.grpc.server.exceptions.DoctorDoesNotExistException;
 import ar.edu.itba.pod.grpc.server.exceptions.InvalidLevelException;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class DoctorRepository {
 
@@ -37,7 +41,7 @@ public class DoctorRepository {
                 }
             }
         }
-        return null;
+        throw new DoctorDoesNotExistException();
     }
 
     public Doctor checkDoctor(String doctorName) {
@@ -45,15 +49,7 @@ public class DoctorRepository {
             if (d.getName().equals(doctorName))
                 return d;
         }
-        return null;
-    }
-
-    public Doctor getDoctorForLevel(int level) {
-        for (Doctor d : doctors) {
-            if (d.getAvailability().equals(Availability.AVAILABILITY_AVAILABLE) && d.getLevel() >= level)
-                return d;
-        }
-        return null;
+        throw new DoctorDoesNotExistException();
     }
 
     public List<Doctor> getAvailableDoctors() {

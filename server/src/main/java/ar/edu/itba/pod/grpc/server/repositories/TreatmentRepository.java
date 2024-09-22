@@ -9,11 +9,10 @@ public class TreatmentRepository {
     private final SortedSet<Treatment> currentTreatments = new TreeSet<>(Comparator.comparingInt(t -> t.getRoom().getNumber()));
     private final List<Treatment> completedTreatments = new ArrayList<>();
 
-    public Treatment addTreatment(Treatment treatment) {
+    public void addTreatment(Treatment treatment) {
         synchronized (currentTreatments) {
             currentTreatments.add(treatment);
         }
-        return treatment;
     }
 
     public Treatment dischargePatient(int roomNumber, String patientName, String doctorName) {

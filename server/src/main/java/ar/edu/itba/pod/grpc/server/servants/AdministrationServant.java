@@ -1,5 +1,6 @@
 package ar.edu.itba.pod.grpc.server.servants;
 
+import ar.edu.itba.pod.grpc.hospital.Availability;
 import ar.edu.itba.pod.grpc.hospital.Doctor;
 import ar.edu.itba.pod.grpc.hospital.Room;
 import ar.edu.itba.pod.grpc.hospital.administration.AdministrationServiceGrpc.AdministrationServiceImplBase;
@@ -8,6 +9,7 @@ import ar.edu.itba.pod.grpc.hospital.administration.DoctorCreation;
 import ar.edu.itba.pod.grpc.hospital.doctorpager.Event;
 import ar.edu.itba.pod.grpc.hospital.doctorpager.Type;
 import ar.edu.itba.pod.grpc.server.exceptions.DoctorAlreadyExistsException;
+import ar.edu.itba.pod.grpc.server.exceptions.DoctorDoesNotExistException;
 import ar.edu.itba.pod.grpc.server.exceptions.InvalidLevelException;
 import ar.edu.itba.pod.grpc.server.repositories.DoctorRepository;
 import ar.edu.itba.pod.grpc.server.repositories.EventRepository;
@@ -16,6 +18,8 @@ import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+
+import java.util.List;
 
 public class AdministrationServant extends AdministrationServiceImplBase {
 
@@ -41,14 +45,39 @@ public class AdministrationServant extends AdministrationServiceImplBase {
             responseObserver.onNext(doctorRepository.addDoctor(request.getName(), request.getLevel()));
             responseObserver.onCompleted();
         } catch (InvalidLevelException e) {
-            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Invalid level").asRuntimeException());
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("Invalid level")
+                    .asRuntimeException());
         } catch (DoctorAlreadyExistsException e) {
-            responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Doctor already exists").asRuntimeException());
+            responseObserver.onError(Status.ALREADY_EXISTS
+                    .withDescription("Doctor already exists")
+                    .asRuntimeException());
         }
     }
 
     @Override
     public void setDoctor(DoctorAvailabilityUpdate request, StreamObserver<Doctor> responseObserver) {
+        if (!List.of(Availability.AVAILABILITY_AVAILABLE, Availability.AVAILABILITY_UNAVAILABLE).contains(request.getAvailability())) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("Invalid availability")
+                    .asRuntimeException());
+            return;
+        }
+
+        try {
+            Doctor d = doctorRepository.checkDoctor(request.getDoctorName());
+            if (d.getAvailability().equals(Availability.AVAILABILITY_ATTENDING)) {
+                responseObserver.onError(Status.FAILED_PRECONDITION
+                        .withDescription("Doctor is attending")
+                        .asRuntimeException());
+                return;
+            }
+        } catch (DoctorDoesNotExistException e) {
+            responseObserver.onError(Status.NOT_FOUND
+                    .withDescription("Doctor does not exist")
+                    .asRuntimeException());
+        }
+
         Doctor doctor = doctorRepository.setDoctorAvailability(request.getDoctorName(), request.getAvailability());
         // TODO: chequear que se haya hecho correcto
         eventRepository.addEvent(doctor.getName(), Event.newBuilder()
@@ -61,8 +90,14 @@ public class AdministrationServant extends AdministrationServiceImplBase {
 
     @Override
     public void checkDoctor(StringValue request, StreamObserver<Doctor> responseObserver) {
-        responseObserver.onNext(doctorRepository.checkDoctor(request.getValue()));
-        responseObserver.onCompleted();
+        try {
+            responseObserver.onNext(doctorRepository.checkDoctor(request.getValue()));
+            responseObserver.onCompleted();
+        } catch (DoctorDoesNotExistException e) {
+            responseObserver.onError(Status.NOT_FOUND
+                    .withDescription("Doctor does not exist")
+                    .asRuntimeException());
+        }
     }
 
 

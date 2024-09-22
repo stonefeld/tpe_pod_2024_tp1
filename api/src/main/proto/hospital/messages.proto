@@ -3,7 +3,6 @@ syntax = "proto3";
 package hospital;
 
 option java_package = "ar.edu.itba.pod.grpc.hospital";
-//option java_outer_classname = "HospitalServiceModel";
 option java_multiple_files = true;
 
 enum Availability {
