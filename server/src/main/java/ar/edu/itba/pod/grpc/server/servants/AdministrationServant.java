@@ -42,7 +42,10 @@ public class AdministrationServant extends AdministrationServiceImplBase {
     public void setDoctor(DoctorAvailabilityUpdate request, StreamObserver<Doctor> responseObserver) {
         Doctor doctor = doctorRepository.setDoctorAvailability(request.getDoctorName(), request.getAvailability());
         // TODO: chequear que se haya hecho correcto
-        eventRepository.addEvent(doctor.getName(), Event.newBuilder().setType(Type.AVAILABILITY).build());
+        eventRepository.addEvent(doctor.getName(), Event.newBuilder()
+                .setType(Type.AVAILABILITY)
+                .setDoctor(doctor)
+                .build());
         responseObserver.onNext(doctor);
         responseObserver.onCompleted();
     }

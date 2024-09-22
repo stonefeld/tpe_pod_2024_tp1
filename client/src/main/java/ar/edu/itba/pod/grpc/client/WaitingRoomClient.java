@@ -17,8 +17,6 @@ public class WaitingRoomClient {
     private static final Logger logger = LoggerFactory.getLogger(WaitingRoomClient.class);
 
     public static void main(String[] args) throws InterruptedException {
-        logger.info("tpe1-g2 Client Starting ...");
-        logger.info("grpc-com-patterns Client Starting ...");
         ManagedChannel channel = ChannelBuilder.buildChannel();
 
         final String action = System.getProperty("action");

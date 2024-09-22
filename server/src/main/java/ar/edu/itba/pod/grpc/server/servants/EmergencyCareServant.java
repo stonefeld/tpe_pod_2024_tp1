@@ -55,7 +55,10 @@ public class EmergencyCareServant extends EmergencyCareServiceImplBase {
         Treatment treatment = treatmentRepository.dischargePatient(request.getRoomNumber(), request.getPatientName(), request.getDoctorName());
         roomRepository.setRoomStatus(treatment.getRoom().getNumber(), Status.STATUS_FREE);
         doctorRepository.setDoctorAvailability(treatment.getDoctor().getName(), Availability.AVAILABILITY_AVAILABLE);
-        eventRepository.addEvent(treatment.getDoctor().getName(), Event.newBuilder().setType(Type.DISCHARGE).build());
+        eventRepository.addEvent(treatment.getDoctor().getName(), Event.newBuilder()
+                .setType(Type.DISCHARGE)
+                .setTreatment(treatment)
+                .build());
         responseObserver.onNext(treatment);
         responseObserver.onCompleted();
     }
@@ -75,7 +78,10 @@ public class EmergencyCareServant extends EmergencyCareServiceImplBase {
                                 .setPatient(patientRepository.attendPatient(p))
                                 .build();
                         treatmentRepository.addTreatment(treatment);
-                        eventRepository.addEvent(d.getName(), Event.newBuilder().setType(Type.TREATMENT).build());
+                        eventRepository.addEvent(d.getName(), Event.newBuilder()
+                                .setType(Type.TREATMENT)
+                                .setTreatment(treatment)
+                                .build());
                         return treatment;
                     }
                 }

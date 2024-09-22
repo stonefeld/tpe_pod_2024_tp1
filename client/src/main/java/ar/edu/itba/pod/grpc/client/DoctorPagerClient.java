@@ -18,8 +18,6 @@ public class DoctorPagerClient {
     private static final Logger logger = LoggerFactory.getLogger(DoctorPagerClient.class);
 
     public static void main(String[] args) throws InterruptedException {
-        logger.info("tpe1-g2 Client Starting ...");
-        logger.info("grpc-com-patterns Client Starting ...");
         ManagedChannel channel = ChannelBuilder.buildChannel();
 
         final String action = System.getProperty("action");
@@ -34,18 +32,43 @@ public class DoctorPagerClient {
                     Iterator<Event> events;
 
                     try {
-                        logger.info("Solicito registro para Doctor {}", request.getName());
                         events = stub.register(request);
                         while (events.hasNext()) {
                             Event event = events.next();
 
                             switch (event.getType()) {
-                                case REGISTER -> logger.info("Doctor {} registrado", doctorName);
-                                case UNREGISTER -> logger.info("Doctor {} desregistrado", doctorName);
-                                case AVAILABILITY -> logger.info("Doctor {} esperando paciente", doctorName);
-                                case TREATMENT -> logger.info("Doctor {} atendiendo paciente", doctorName);
-                                case DISCHARGE -> logger.info("Doctor {} dio de alta al paciente", doctorName);
-                                default -> logger.error("Invalid event type: {}", event.getType());
+                                case REGISTER -> System.out.printf(
+                                        "Doctor %s (%d) registered successfully for pager\n",
+                                        event.getDoctor().getName(),
+                                        event.getDoctor().getLevel()
+                                );
+                                case UNREGISTER -> System.out.printf(
+                                        "Doctor %s (%d) unregistered successfully from pager\n",
+                                        event.getDoctor().getName(),
+                                        event.getDoctor().getLevel()
+                                );
+                                case AVAILABILITY -> System.out.printf(
+                                        "Doctor %s (%d) is %s\n",
+                                        event.getDoctor().getName(),
+                                        event.getDoctor().getLevel(),
+                                        event.getDoctor().getAvailability().name()
+                                );
+                                case TREATMENT -> System.out.printf(
+                                        "Patient %s (%d) and Doctor %s (%d) are now in Room #%d\n",
+                                        event.getTreatment().getPatient().getName(),
+                                        event.getTreatment().getPatient().getLevel(),
+                                        event.getTreatment().getDoctor().getName(),
+                                        event.getTreatment().getDoctor().getLevel(),
+                                        event.getTreatment().getRoom().getNumber()
+                                );
+                                case DISCHARGE -> System.out.printf(
+                                        "Patient %s (%d) has been discharged from Doctor %s (%d) and the Room #%d is now Free\n",
+                                        event.getTreatment().getPatient().getName(),
+                                        event.getTreatment().getPatient().getLevel(),
+                                        event.getTreatment().getDoctor().getName(),
+                                        event.getTreatment().getDoctor().getLevel(),
+                                        event.getTreatment().getRoom().getNumber()
+                                );
                             }
                         }
                     } catch (StatusRuntimeException e) {
@@ -55,9 +78,11 @@ public class DoctorPagerClient {
                 case "unregister" -> {
                     Event event = stub.unregister(request);
                     if (event.getType().equals(Type.UNREGISTER)) {
-                        logger.info("Doctor {} desregistrado", doctorName);
-                    } else {
-                        logger.error("Invalid event type: {}", event.getType());
+                        System.out.printf(
+                                "Doctor %s (%d) unregistered successfully from pager\n",
+                                event.getDoctor().getName(),
+                                event.getDoctor().getLevel()
+                        );
                     }
                 }
                 default -> logger.error("Invalid action: {}", action);

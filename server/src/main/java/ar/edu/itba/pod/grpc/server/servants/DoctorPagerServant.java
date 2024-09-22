@@ -6,6 +6,7 @@ import ar.edu.itba.pod.grpc.hospital.doctorpager.DoctorRegistration;
 import ar.edu.itba.pod.grpc.hospital.doctorpager.Event;
 import ar.edu.itba.pod.grpc.hospital.doctorpager.Type;
 import ar.edu.itba.pod.grpc.server.exceptions.DoctorNotRegisteredException;
+import ar.edu.itba.pod.grpc.server.repositories.DoctorRepository;
 import ar.edu.itba.pod.grpc.server.repositories.EventRepository;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
@@ -19,9 +20,11 @@ public class DoctorPagerServant extends DoctorPagerServiceImplBase {
 
     Logger logger = LoggerFactory.getLogger(DoctorPagerServant.class);
 
+    private final DoctorRepository doctorRepository;
     private final EventRepository eventRepository;
 
-    public DoctorPagerServant(EventRepository eventRepository) {
+    public DoctorPagerServant(DoctorRepository doctorRepository, EventRepository eventRepository) {
+        this.doctorRepository = doctorRepository;
         this.eventRepository = eventRepository;
     }
 
@@ -29,8 +32,18 @@ public class DoctorPagerServant extends DoctorPagerServiceImplBase {
     public void register(DoctorRegistration request, StreamObserver<Event> responseObserver) {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
+        Doctor doctor = doctorRepository.checkDoctor(request.getName());
+
+        if (doctor == null) {
+            responseObserver.onError(new DoctorNotRegisteredException("Doctor not registered"));
+            return;
+        }
+
         eventRepository.registerDoctor(request.getName());
-        eventRepository.addEvent(request.getName(), Event.newBuilder().setType(Type.REGISTER).build());
+        eventRepository.addEvent(request.getName(), Event.newBuilder()
+                .setType(Type.REGISTER)
+                .setDoctor(doctor)
+                .build());
 
         scheduler.scheduleAtFixedRate(() -> {
             try {
@@ -44,7 +57,17 @@ public class DoctorPagerServant extends DoctorPagerServiceImplBase {
 
     @Override
     public void unregister(DoctorRegistration request, StreamObserver<Event> responseObserver) {
-        Event event = Event.newBuilder().setType(Type.UNREGISTER).build();
+        Doctor doctor = doctorRepository.checkDoctor(request.getName());
+
+        if (doctor == null) {
+            responseObserver.onError(new DoctorNotRegisteredException("Doctor not registered"));
+            return;
+        }
+
+        Event event = Event.newBuilder()
+                .setType(Type.UNREGISTER)
+                .setDoctor(doctor)
+                .build();
         eventRepository.addEvent(request.getName(), event);
 
         try {

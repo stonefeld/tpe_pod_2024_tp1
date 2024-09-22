@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 public class Server {
 
@@ -28,7 +27,7 @@ public class Server {
                 .addService(new AdministrationServant(roomRepository, doctorRepository, eventRepository))
                 .addService(new WaitingRoomServant(patientRepository))
                 .addService(new EmergencyCareServant(roomRepository, patientRepository, doctorRepository, treatmentRepository, eventRepository))
-                .addService(new DoctorPagerServant(eventRepository))
+                .addService(new DoctorPagerServant(doctorRepository, eventRepository))
                 .addService(new QueryServant(treatmentRepository, patientRepository))
                 .build();
         server.start();
