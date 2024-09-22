@@ -5,13 +5,19 @@ import ar.edu.itba.pod.grpc.hospital.waitingroom.PatientQueueInfo;
 import ar.edu.itba.pod.grpc.server.exceptions.InvalidLevelException;
 import ar.edu.itba.pod.grpc.server.exceptions.PatientAlreadyExistsException;
 import ar.edu.itba.pod.grpc.server.exceptions.PatientDoesNotExistException;
+import com.google.protobuf.Timestamp;
 
 
+import java.time.Instant;
 import java.util.*;
 
 public class PatientRepository {
 
-    private final SortedMap<Integer, Queue<Patient>> patients = new TreeMap<>(Comparator.reverseOrder());
+    private static final Comparator<Patient> COMPARATOR = Comparator
+            .comparingLong((Patient p) -> p.getArrivalTime().getSeconds())
+            .thenComparingInt(p -> p.getArrivalTime().getNanos());
+
+    private final SortedMap<Integer, SortedSet<Patient>> patients = new TreeMap<>(Comparator.reverseOrder());
     private final Set<String> historicPatients = new HashSet<>();
 
     public Patient addPatient(String name, int level) {
@@ -21,25 +27,35 @@ public class PatientRepository {
             throw new InvalidLevelException();
 
         historicPatients.add(name);
-        Patient patient = Patient.newBuilder().setName(name).setLevel(level).build();
+        Instant instant = Instant.now();
+        Timestamp timestamp = Timestamp.newBuilder()
+                .setSeconds(instant.getEpochSecond())
+                .setNanos(instant.getNano())
+                .build();
+        Patient patient = Patient.newBuilder()
+                .setName(name)
+                .setLevel(level)
+                .setArrivalTime(timestamp)
+                .build();
+
         synchronized (patients) {
-            patients.computeIfAbsent(level, k -> new LinkedList<>()).add(patient);
+            patients.computeIfAbsent(level, k -> new TreeSet<>(COMPARATOR)).add(patient);
         }
         return patient;
     }
 
     public List<Patient> getPatients() {
         List<Patient> allPatients = new ArrayList<>();
-        for (Queue<Patient> patientQueue : patients.values())
+        for (Set<Patient> patientQueue : patients.values())
             allPatients.addAll(patientQueue);
         return allPatients;
     }
 
     public List<Patient> getFirstPatientFromEveryLevel() {
         List<Patient> firstPatients = new ArrayList<>();
-        for (Queue<Patient> patientQueue : patients.values()) {
+        for (Set<Patient> patientQueue : patients.values()) {
             if (!patientQueue.isEmpty())
-                firstPatients.add(patientQueue.peek());
+                firstPatients.add(patientQueue.stream().findFirst().get());
         }
         return firstPatients;
     }
@@ -55,13 +71,14 @@ public class PatientRepository {
         if (level < 1 || level > 5)
             throw new InvalidLevelException();
 
-        Patient patient = Patient.newBuilder().setName(name).setLevel(level).build();
+        Patient.Builder patientBuilder = Patient.newBuilder().setName(name).setLevel(level);
         synchronized (patients) {
-            for (Queue<Patient> patientQueue : patients.values()) {
+            for (Set<Patient> patientQueue : patients.values()) {
                 for (Patient p : patientQueue) {
                     if (p.getName().equals(name)) {
+                        Patient patient = patientBuilder.setArrivalTime(p.getArrivalTime()).build();
                         patientQueue.remove(p);
-                        patients.computeIfAbsent(level, k -> new LinkedList<>()).add(patient);
+                        patients.computeIfAbsent(level, k -> new TreeSet<>(COMPARATOR)).add(patient);
                         return patient;
                     }
                 }
@@ -73,8 +90,7 @@ public class PatientRepository {
     public PatientQueueInfo checkPatient(String name) {
         synchronized (patients) {
             int count = 0;
-            for (Map.Entry<Integer, Queue<Patient>> entry : patients.entrySet()) {
-                Queue<Patient> queue = entry.getValue();
+            for (Set<Patient> queue : patients.values()) {
                 for (Patient patient : queue) {
                     if (patient.getName().equals(name))
                         return PatientQueueInfo.newBuilder().setPatient(patient).setQueueLength(count).build();

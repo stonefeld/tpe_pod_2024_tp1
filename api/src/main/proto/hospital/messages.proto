@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 package hospital;
 
 option java_package = "ar.edu.itba.pod.grpc.hospital";
@@ -27,6 +29,7 @@ message Doctor {
 message Patient {
   string name = 1;
   uint32 level = 2;
+  google.protobuf.Timestamp arrivalTime = 3;
 }
 
 message Room {
