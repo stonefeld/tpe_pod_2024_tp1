@@ -2,6 +2,7 @@ package ar.edu.itba.pod.grpc.server.repositories;
 
 import ar.edu.itba.pod.grpc.hospital.Room;
 import ar.edu.itba.pod.grpc.hospital.Status;
+import ar.edu.itba.pod.grpc.server.exceptions.RoomDoesNotExistException;
 
 import java.util.Comparator;
 import java.util.List;
@@ -23,7 +24,8 @@ public class RoomRepository {
 
     public Room getRoom(int roomNumber) {
         synchronized (rooms) {
-            return rooms.stream().filter(r -> r.getNumber() == roomNumber).findFirst().orElse(null);
+            return rooms.stream().filter(r -> r.getNumber() == roomNumber).findFirst()
+                    .orElseThrow(RoomDoesNotExistException::new);
         }
     }
 
@@ -40,6 +42,12 @@ public class RoomRepository {
 
     public List<Room> getRooms() {
         return List.copyOf(rooms);
+    }
+
+    public boolean roomExists(int roomNumber) {
+        synchronized (rooms) {
+            return rooms.stream().anyMatch(r -> r.getNumber() == roomNumber);
+        }
     }
 
 }

@@ -58,7 +58,7 @@ public class DoctorRepository {
         }
     }
 
-    private boolean doctorExists(String doctorName) {
+    public boolean doctorExists(String doctorName) {
         for (Doctor d : doctors) {
             if (d.getName().equals(doctorName))
                 return true;

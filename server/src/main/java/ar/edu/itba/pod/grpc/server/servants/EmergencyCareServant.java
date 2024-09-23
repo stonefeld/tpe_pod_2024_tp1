@@ -5,6 +5,9 @@ import ar.edu.itba.pod.grpc.hospital.doctorpager.Event;
 import ar.edu.itba.pod.grpc.hospital.doctorpager.Type;
 import ar.edu.itba.pod.grpc.hospital.emergencycare.EmergencyCareServiceGrpc.EmergencyCareServiceImplBase;
 import ar.edu.itba.pod.grpc.hospital.emergencycare.TreatmentEnding;
+import ar.edu.itba.pod.grpc.server.exceptions.DoctorDoesNotExistException;
+import ar.edu.itba.pod.grpc.server.exceptions.PatientDoesNotExistException;
+import ar.edu.itba.pod.grpc.server.exceptions.RoomDoesNotExistException;
 import ar.edu.itba.pod.grpc.server.repositories.*;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
@@ -30,12 +33,30 @@ public class EmergencyCareServant extends EmergencyCareServiceImplBase {
 
     @Override
     public void carePatient(TreatmentRoom request, StreamObserver<Treatment> responseObserver) {
-        // TODO: chequear si la ROOM ya esta usada
-        // TODO: chequear caso de error
+        try {
+            Room room = roomRepository.getRoom(request.getRoomNumber());
+            if (room.getStatus().equals(Status.STATUS_OCCUPIED)) {
+                responseObserver.onError(io.grpc.Status.FAILED_PRECONDITION
+                        .withDescription("Room is already occupied")
+                        .asRuntimeException());
+                return;
+            }
 
-        Room room = roomRepository.getRoom(request.getRoomNumber());
-        responseObserver.onNext(createTreatment(room));
-        responseObserver.onCompleted();
+            Treatment treatment = createTreatment(room);
+            if (!treatment.hasDoctor() && !treatment.hasPatient()) {
+                responseObserver.onError(io.grpc.Status.FAILED_PRECONDITION
+                        .withDescription("Room #" + room.getNumber() + " remains Free")
+                        .asRuntimeException());
+                return;
+            }
+
+            responseObserver.onNext(treatment);
+            responseObserver.onCompleted();
+        } catch (RoomDoesNotExistException e) {
+            responseObserver.onError(io.grpc.Status.NOT_FOUND
+                    .withDescription("Room does not exist")
+                    .asRuntimeException());
+        }
     }
 
     @Override
@@ -50,17 +71,48 @@ public class EmergencyCareServant extends EmergencyCareServiceImplBase {
 
     @Override
     public void dischargePatient(TreatmentEnding request, StreamObserver<Treatment> responseObserver) {
-//         TODO: chequear los parametros
+        try {
+            Treatment treatment = treatmentRepository.dischargePatient(request.getRoomNumber(), request.getPatientName(), request.getDoctorName());
+            roomRepository.setRoomStatus(treatment.getRoom().getNumber(), Status.STATUS_FREE);
+            doctorRepository.setDoctorAvailability(treatment.getDoctor().getName(), Availability.AVAILABILITY_AVAILABLE);
+            eventRepository.addEvent(treatment.getDoctor().getName(), Event.newBuilder()
+                    .setType(Type.DISCHARGE)
+                    .setTreatment(treatment)
+                    .build());
+            responseObserver.onNext(treatment);
+            responseObserver.onCompleted();
+        } catch (DoctorDoesNotExistException e) {
+            String message;
+            if (doctorRepository.doctorExists(request.getDoctorName())) {
+                message = "Doctor is not attending in that room";
+            } else {
+                message = "Doctor does not exist";
+            }
+            responseObserver.onError(io.grpc.Status.NOT_FOUND
+                    .withDescription(message)
+                    .asRuntimeException());
 
-        Treatment treatment = treatmentRepository.dischargePatient(request.getRoomNumber(), request.getPatientName(), request.getDoctorName());
-        roomRepository.setRoomStatus(treatment.getRoom().getNumber(), Status.STATUS_FREE);
-        doctorRepository.setDoctorAvailability(treatment.getDoctor().getName(), Availability.AVAILABILITY_AVAILABLE);
-        eventRepository.addEvent(treatment.getDoctor().getName(), Event.newBuilder()
-                .setType(Type.DISCHARGE)
-                .setTreatment(treatment)
-                .build());
-        responseObserver.onNext(treatment);
-        responseObserver.onCompleted();
+        } catch (PatientDoesNotExistException e) {
+            String message;
+            if (patientRepository.patientExists(request.getPatientName())) {
+                message = "Patient is not being attended by that doctor";
+            } else {
+                message = "Patient does not exist";
+            }
+            responseObserver.onError(io.grpc.Status.NOT_FOUND
+                    .withDescription(message)
+                    .asRuntimeException());
+        } catch (RoomDoesNotExistException e) {
+            String message;
+            if (roomRepository.roomExists(request.getRoomNumber())) {
+                message = "Room is not occupied by that doctor";
+            } else {
+                message = "Room does not exist";
+            }
+            responseObserver.onError(io.grpc.Status.NOT_FOUND
+                    .withDescription(message)
+                    .asRuntimeException());
+        }
     }
 
     private Treatment createTreatment(Room room) {

@@ -100,4 +100,17 @@ public class PatientRepository {
         }
         throw new PatientDoesNotExistException();
     }
+
+    public boolean patientExists(String name) {
+        synchronized (patients) {
+            for (Set<Patient> queue : patients.values()) {
+                for (Patient patient : queue) {
+                    if (patient.getName().equals(name))
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
+
 }

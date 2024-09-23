@@ -9,6 +9,7 @@ import ar.edu.itba.pod.grpc.hospital.emergencycare.EmergencyCareServiceGrpc;
 import ar.edu.itba.pod.grpc.hospital.emergencycare.TreatmentEnding;
 import com.google.protobuf.Empty;
 import io.grpc.ManagedChannel;
+import io.grpc.StatusRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +23,8 @@ public class EmergencyCareClient {
         ManagedChannel channel = ChannelBuilder.buildChannel();
 
         final String action = System.getProperty("action");
-        final String doctorName, patientName;
+        final String doctorName = System.getProperty("doctor", "");
+        final String patientName = System.getProperty("patient", "");
         final int roomNumber;
 
         try {
@@ -30,22 +32,30 @@ public class EmergencyCareClient {
 
             switch (action) {
                 case "carePatient" -> {
-                    roomNumber = Integer.parseInt(System.getProperty("room"));
-                    final Treatment treatment = blockingStub.carePatient(TreatmentRoom.newBuilder().setRoomNumber(roomNumber).build());
+                    roomNumber = Integer.parseInt(System.getProperty("room", "0"));
+                    if (roomNumber == 0) {
+                        System.out.println("Room number is required");
+                        return;
+                    }
 
-                    System.out.printf("Patient %s (%d) and Doctor %s (%d) are now in Room #%d\n",
-                            treatment.getPatient().getName(),
-                            treatment.getPatient().getLevel(),
-                            treatment.getDoctor().getName(),
-                            treatment.getDoctor().getLevel(),
-                            treatment.getRoom().getNumber());
+                    try {
+                        final Treatment treatment = blockingStub.carePatient(TreatmentRoom.newBuilder().setRoomNumber(roomNumber).build());
+                        System.out.printf("Patient %s (%d) and Doctor %s (%d) are now in Room #%d\n",
+                                treatment.getPatient().getName(),
+                                treatment.getPatient().getLevel(),
+                                treatment.getDoctor().getName(),
+                                treatment.getDoctor().getLevel(),
+                                treatment.getRoom().getNumber());
+                    } catch (StatusRuntimeException e) {
+                        System.out.println(e.getStatus().getDescription());
+                    }
                 }
                 case "careAllPatients" -> {
                     final Treatments treatments = blockingStub.careAllPatients(Empty.newBuilder().build());
 
                     for (Treatment treatment : treatments.getTreatmentsList()) {
                         if (treatment.getRoom().getStatus().equals(Status.STATUS_FREE)) {
-                            System.out.printf("Room #%d remains free\n", treatment.getRoom().getNumber());
+                            System.out.printf("Room #%d remains Free\n", treatment.getRoom().getNumber());
                         } else if (treatment.getRoom().getStatus().equals(Status.STATUS_OCCUPIED) && treatment.hasDoctor() && treatment.hasPatient()) {
                             System.out.printf("Patient %s (%d) and Doctor %s (%d) are now in Room #%d\n",
                                     treatment.getPatient().getName(),
@@ -59,22 +69,36 @@ public class EmergencyCareClient {
                     }
                 }
                 case "dischargePatient" -> {
-                    roomNumber = Integer.parseInt(System.getProperty("room"));
-                    patientName = System.getProperty("patient");
-                    doctorName = System.getProperty("doctor");
+                    if (doctorName.isEmpty()) {
+                        System.out.println("Doctor name is required");
+                        return;
+                    }
+                    if (patientName.isEmpty()) {
+                        System.out.println("Patient name is required");
+                        return;
+                    }
+                    roomNumber = Integer.parseInt(System.getProperty("room", "0"));
+                    if (roomNumber == 0) {
+                        System.out.println("Room number is required");
+                        return;
+                    }
 
-                    final Treatment treatment = blockingStub.dischargePatient(TreatmentEnding.newBuilder()
-                            .setRoomNumber(roomNumber)
-                            .setPatientName(patientName)
-                            .setDoctorName(doctorName)
-                            .build());
+                    try {
+                        final Treatment treatment = blockingStub.dischargePatient(TreatmentEnding.newBuilder()
+                                .setRoomNumber(roomNumber)
+                                .setPatientName(patientName)
+                                .setDoctorName(doctorName)
+                                .build());
 
-                    System.out.printf("Patient %s (%d) has been discharged from Doctor %s (%d) and the Room #%d is now Free\n",
-                            treatment.getPatient().getName(),
-                            treatment.getPatient().getLevel(),
-                            treatment.getDoctor().getName(),
-                            treatment.getDoctor().getLevel(),
-                            treatment.getRoom().getNumber());
+                        System.out.printf("Patient %s (%d) has been discharged from Doctor %s (%d) and the Room #%d is now Free\n",
+                                treatment.getPatient().getName(),
+                                treatment.getPatient().getLevel(),
+                                treatment.getDoctor().getName(),
+                                treatment.getDoctor().getLevel(),
+                                treatment.getRoom().getNumber());
+                    } catch (StatusRuntimeException e) {
+                        System.out.println(e.getStatus().getDescription());
+                    }
                 }
                 default -> logger.error("Invalid action: {}", action);
             }
