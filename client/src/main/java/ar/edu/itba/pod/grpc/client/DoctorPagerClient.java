@@ -21,7 +21,12 @@ public class DoctorPagerClient {
         ManagedChannel channel = ChannelBuilder.buildChannel();
 
         final String action = System.getProperty("action");
-        final String doctorName = System.getProperty("doctor");
+        final String doctorName = System.getProperty("doctor", "");
+
+        if (doctorName.isEmpty()) {
+            System.out.println("Doctor name is required");
+            return;
+        }
 
         try {
             DoctorPagerServiceGrpc.DoctorPagerServiceBlockingStub stub = DoctorPagerServiceGrpc.newBlockingStub(channel);
@@ -72,17 +77,21 @@ public class DoctorPagerClient {
                             }
                         }
                     } catch (StatusRuntimeException e) {
-                        logger.error("An error occurred: {}", e.getStatus());
+                        System.out.println(e.getStatus().getDescription());
                     }
                 }
                 case "unregister" -> {
-                    Event event = stub.unregister(request);
-                    if (event.getType().equals(Type.UNREGISTER)) {
-                        System.out.printf(
-                                "Doctor %s (%d) unregistered successfully from pager\n",
-                                event.getDoctor().getName(),
-                                event.getDoctor().getLevel()
-                        );
+                    try {
+                        Event event = stub.unregister(request);
+                        if (event.getType().equals(Type.UNREGISTER)) {
+                            System.out.printf(
+                                    "Doctor %s (%d) unregistered successfully from pager\n",
+                                    event.getDoctor().getName(),
+                                    event.getDoctor().getLevel()
+                            );
+                        }
+                    } catch (StatusRuntimeException e) {
+                        System.out.println(e.getStatus().getDescription());
                     }
                 }
                 default -> logger.error("Invalid action: {}", action);

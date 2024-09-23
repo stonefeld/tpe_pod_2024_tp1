@@ -1,6 +1,7 @@
 package ar.edu.itba.pod.grpc.server.repositories;
 
 import ar.edu.itba.pod.grpc.hospital.doctorpager.Event;
+import ar.edu.itba.pod.grpc.server.exceptions.DoctorAlreadyRegisteredException;
 import ar.edu.itba.pod.grpc.server.exceptions.DoctorNotRegisteredException;
 
 import java.util.HashMap;
@@ -14,12 +15,16 @@ public class EventRepository {
 
     public void registerDoctor(String doctor) {
         synchronized (events) {
+            if (events.containsKey(doctor))
+                throw new DoctorAlreadyRegisteredException();
             events.put(doctor, new LinkedList<>());
         }
     }
 
     public void unregisterDoctor(String doctor) {
         synchronized (events) {
+            if (!events.containsKey(doctor))
+                throw new DoctorNotRegisteredException();
             events.remove(doctor);
         }
     }
@@ -35,7 +40,7 @@ public class EventRepository {
     public Event getEvent(String doctor) {
         synchronized (events) {
             if (!events.containsKey(doctor))
-                throw new DoctorNotRegisteredException("Doctor not registered");
+                throw new DoctorNotRegisteredException();
             return events.get(doctor).poll();
         }
     }
