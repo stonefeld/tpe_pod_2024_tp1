@@ -1,5 +1,6 @@
 package ar.edu.itba.pod.grpc.server.repositories;
 
+import ar.edu.itba.pod.grpc.hospital.Room;
 import ar.edu.itba.pod.grpc.hospital.Treatment;
 import ar.edu.itba.pod.grpc.server.exceptions.DoctorDoesNotExistException;
 import ar.edu.itba.pod.grpc.server.exceptions.PatientDoesNotExistException;
@@ -44,8 +45,17 @@ public class TreatmentRepository {
         }
     }
 
-    public List<Treatment> getCurrentTreatments() {
-        return List.copyOf(currentTreatments);
+    public List<Treatment> getTreatmentsByRoom(List<Room> rooms) {
+        List<Treatment> treatments = new ArrayList<>();
+        synchronized (currentTreatments) {
+            for (Room room : rooms) {
+                treatments.add(currentTreatments.stream()
+                        .filter(t -> t.getRoom().getNumber() == room.getNumber())
+                        .findFirst()
+                        .orElse(Treatment.newBuilder().setRoom(room).build()));
+            }
+        }
+        return treatments;
     }
 
     public List<Treatment> getCompletedTreatments() {

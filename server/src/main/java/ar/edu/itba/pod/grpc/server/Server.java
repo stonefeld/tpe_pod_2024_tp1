@@ -28,7 +28,7 @@ public class Server {
                 .addService(new WaitingRoomServant(patientRepository))
                 .addService(new EmergencyCareServant(roomRepository, patientRepository, doctorRepository, treatmentRepository, eventRepository))
                 .addService(new DoctorPagerServant(doctorRepository, eventRepository))
-                .addService(new QueryServant(treatmentRepository, patientRepository))
+                .addService(new QueryServant(treatmentRepository, patientRepository, roomRepository))
                 .build();
         server.start();
         logger.info("Server started, listening on {}", port);

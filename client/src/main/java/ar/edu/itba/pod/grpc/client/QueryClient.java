@@ -9,6 +9,7 @@ import ar.edu.itba.pod.grpc.hospital.query.QueryServiceGrpc.QueryServiceBlocking
 import ar.edu.itba.pod.grpc.hospital.query.WaitingPatients;
 import com.google.protobuf.Empty;
 import io.grpc.ManagedChannel;
+import io.grpc.StatusRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,12 +38,11 @@ public class QueryClient {
             switch (action) {
                 case "queryRooms" -> {
                     fileName = System.getProperty("outPath");
-                    final Treatments treatments = blockingStub.queryRooms(Empty.newBuilder().build());
 
                     try {
-//                        writeRoomsToCSV(fileName, treatments);
+                        final Treatments treatments = blockingStub.queryRooms(Empty.newBuilder().build());
+
                         String header = "Room,Status,Patient,Doctor";
-                        // TODO: no devulve los rooms vacios
                         List<Treatment> treatmentList = treatments.getTreatmentsList();
 
                         Function<Treatment, String> csvLineMapper = treatment -> {
@@ -59,15 +59,17 @@ public class QueryClient {
 
                         writeToCSV(fileName, header, treatmentList, csvLineMapper);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        logger.error("Error writing to file: {}", e.getMessage());
+                    } catch (StatusRuntimeException e) {
+                        System.out.println(e.getStatus().getDescription());
                     }
                 }
                 case "queryWaitingRoom" -> {
                     fileName = System.getProperty("outPath");
-                    final WaitingPatients patients = blockingStub.queryWaitingRoom(Empty.newBuilder().build());
 
                     try {
-//                        writePatientsToCSV(fileName, patients);
+                        final WaitingPatients patients = blockingStub.queryWaitingRoom(Empty.newBuilder().build());
+
                         String header = "Patient,Level";
                         List<Patient> patientList = patients.getPatientsList();
                         Function<Patient, String> csvLineMapper = patient -> {
@@ -78,15 +80,17 @@ public class QueryClient {
 
                         writeToCSV(fileName, header, patientList, csvLineMapper);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        logger.error("Error writing to file: {}", e.getMessage());
+                    } catch (StatusRuntimeException e) {
+                        System.out.println(e.getStatus().getDescription());
                     }
                 }
                 case "queryCares" -> {
                     fileName = System.getProperty("outPath");
-                    final Treatments treatments = blockingStub.queryCares(Empty.newBuilder().build());
 
                     try {
-//                        writeTreatmentsToCSV(fileName, treatments);
+                        final Treatments treatments = blockingStub.queryCares(Empty.newBuilder().build());
+
                         String header = "Room,Patient,Doctor";
                         List<Treatment> treatmentList = treatments.getTreatmentsList();
 
@@ -103,7 +107,9 @@ public class QueryClient {
 
                         writeToCSV(fileName, header, treatmentList, csvLineMapper);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        logger.error("Error writing to file: {}", e.getMessage());
+                    } catch (StatusRuntimeException e) {
+                        System.out.println(e.getStatus().getDescription());
                     }
                 }
                 default -> logger.error("Invalid action: {}", action);
@@ -115,75 +121,14 @@ public class QueryClient {
 
     private static <T> void writeToCSV(String fileName, String header, List<T> dataList, Function<T, String> csvLineMapper) throws IOException {
         List<String> lines = new ArrayList<>();
-        lines.add(header);  // Add header line
+        lines.add(header);
 
-        // Generate CSV line for each item in the list
         for (T data : dataList) {
             lines.add(csvLineMapper.apply(data));
         }
 
-        // Write lines to the file
         Files.write(Paths.get(fileName), lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
-//    private static void writeRoomsToCSV(String fileName, Treatments treatments) throws IOException {
-//        List<String> lines = new ArrayList<>();
-//
-//        lines.add("Room,Status,Patient,Doctor");
-//
-//        for (Treatment treatment : treatments.getTreatmentsList()) {
-//            String roomNumber = String.valueOf(treatment.getRoom().getNumber());
-//            String status = (!treatment.hasPatient() && !treatment.hasDoctor()) ? "Free" : "Occupied";
-//            String patient = treatment.hasPatient()
-//                    ? treatment.getPatient().getName() + " (" + treatment.getPatient().getLevel() + ")"
-//                    : "";
-//            String doctor = treatment.hasDoctor()
-//                    ? treatment.getDoctor().getName() + " (" + treatment.getDoctor().getLevel() + ")"
-//                    : "";
-//
-//            String csvLine = String.join(",", roomNumber, status, patient, doctor);
-//            lines.add(csvLine);
-//        }
-//
-//        Files.write(Paths.get(fileName), lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-//    }
-//
-//    // TODO: Modularizar
-//    private static void writePatientsToCSV(String fileName, WaitingPatients patients) throws IOException {
-//        List<String> lines = new ArrayList<>();
-//
-//        lines.add("Patient,Level");
-//
-//        for (Patient patient : patients.getPatientsList()) {
-//            String roomNumber = patient.getName();
-//            String level = String.valueOf(patient.getLevel());
-//
-//            String csvLine = String.join(",", roomNumber, level);
-//            lines.add(csvLine);
-//        }
-//
-//        Files.write(Paths.get(fileName), lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-//    }
-//
-//    private static void writeTreatmentsToCSV(String fileName, Treatments treatments) throws IOException {
-//        List<String> lines = new ArrayList<>();
-//
-//        lines.add("Room,Patient,Doctor");
-//
-//        for (Treatment treatment : treatments.getTreatmentsList()) {
-//            String roomNumber = String.valueOf(treatment.getRoom().getNumber());
-//            String patient = treatment.hasPatient()
-//                    ? treatment.getPatient().getName() + " (" + treatment.getPatient().getLevel() + ")"
-//                    : "";
-//            String doctor = treatment.hasDoctor()
-//                    ? treatment.getDoctor().getName() + " (" + treatment.getDoctor().getLevel() + ")"
-//                    : "";
-//
-//            String csvLine = String.join(",", roomNumber, patient, doctor);
-//            lines.add(csvLine);
-//        }
-//
-//        Files.write(Paths.get(fileName), lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-//    }
 }
 
