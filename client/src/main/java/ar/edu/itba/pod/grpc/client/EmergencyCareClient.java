@@ -25,16 +25,23 @@ public class EmergencyCareClient {
         final String action = System.getProperty("action");
         final String doctorName = System.getProperty("doctor", "");
         final String patientName = System.getProperty("patient", "");
-        final int roomNumber;
+        final String room = System.getProperty("room", "");
 
         try {
             EmergencyCareServiceGrpc.EmergencyCareServiceBlockingStub blockingStub = EmergencyCareServiceGrpc.newBlockingStub(channel);
 
             switch (action) {
                 case "carePatient" -> {
-                    roomNumber = Integer.parseInt(System.getProperty("room", "0"));
-                    if (roomNumber == 0) {
+                    if (room.isEmpty()) {
                         System.out.println("Room number is required");
+                        return;
+                    }
+
+                    int roomNumber;
+                    try {
+                        roomNumber = Integer.parseInt(room);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Room number must be a number");
                         return;
                     }
 
@@ -77,9 +84,16 @@ public class EmergencyCareClient {
                         System.out.println("Patient name is required");
                         return;
                     }
-                    roomNumber = Integer.parseInt(System.getProperty("room", "0"));
-                    if (roomNumber == 0) {
+                    if (room.isEmpty()) {
                         System.out.println("Room number is required");
+                        return;
+                    }
+
+                    int roomNumber;
+                    try {
+                        roomNumber = Integer.parseInt(room);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Room number must be a number");
                         return;
                     }
 

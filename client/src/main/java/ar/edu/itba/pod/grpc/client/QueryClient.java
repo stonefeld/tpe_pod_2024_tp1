@@ -30,14 +30,17 @@ public class QueryClient {
         ManagedChannel channel = ChannelBuilder.buildChannel();
 
         final String action = System.getProperty("action");
-        final String fileName;
+        final String fileName = System.getProperty("outPath", "");
 
         try {
             QueryServiceBlockingStub blockingStub = QueryServiceGrpc.newBlockingStub(channel);
 
             switch (action) {
                 case "queryRooms" -> {
-                    fileName = System.getProperty("outPath");
+                    if (fileName.isEmpty()) {
+                        System.out.println("Output file is required");
+                        return;
+                    }
 
                     try {
                         final Treatments treatments = blockingStub.queryRooms(Empty.newBuilder().build());
@@ -65,7 +68,10 @@ public class QueryClient {
                     }
                 }
                 case "queryWaitingRoom" -> {
-                    fileName = System.getProperty("outPath");
+                    if (fileName.isEmpty()) {
+                        System.out.println("Output file is required");
+                        return;
+                    }
 
                     try {
                         final WaitingPatients patients = blockingStub.queryWaitingRoom(Empty.newBuilder().build());
@@ -86,7 +92,10 @@ public class QueryClient {
                     }
                 }
                 case "queryCares" -> {
-                    fileName = System.getProperty("outPath");
+                    if (fileName.isEmpty()) {
+                        System.out.println("Output file is required");
+                        return;
+                    }
 
                     try {
                         final Treatments treatments = blockingStub.queryCares(Empty.newBuilder().build());

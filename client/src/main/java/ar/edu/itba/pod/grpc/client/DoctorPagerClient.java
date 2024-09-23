@@ -1,5 +1,6 @@
 package ar.edu.itba.pod.grpc.client;
 
+import ar.edu.itba.pod.grpc.client.utils.AvailabilityConverter;
 import ar.edu.itba.pod.grpc.client.utils.ChannelBuilder;
 import ar.edu.itba.pod.grpc.hospital.doctorpager.DoctorPagerServiceGrpc;
 import ar.edu.itba.pod.grpc.hospital.doctorpager.DoctorRegistration;
@@ -56,7 +57,7 @@ public class DoctorPagerClient {
                                         "Doctor %s (%d) is %s\n",
                                         event.getDoctor().getName(),
                                         event.getDoctor().getLevel(),
-                                        event.getDoctor().getAvailability().name()
+                                        AvailabilityConverter.availabilityToStr(event.getDoctor().getAvailability())
                                 );
                                 case TREATMENT -> System.out.printf(
                                         "Patient %s (%d) and Doctor %s (%d) are now in Room #%d\n",

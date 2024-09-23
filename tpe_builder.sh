@@ -2,25 +2,39 @@
 
 CLIENT=false
 SERVER=false
+CLEAN=${CLEAN:-false}
 
 print_error() {
   echo "$(basename $0): $1"
   exit 1
 }
 
-command -v mvn &>/dev/null || print_error "Maven is not installed"
+print_help() {
+  echo "Usage: $(basename $0) [-c|--client] [-s|--server] [-h|--help] [-C|--clean]"
+  echo "  -c, --client  Build and unpack the client"
+  echo "  -s, --server  Build and unpack the server"
+  echo "  -C, --clean   Clean the project before building"
+  echo "  -h, --help    Show this help message"
+  exit 0
+}
 
-while getopts 'cs' flag; do
-  case "${flag}" in
-    c) CLIENT=true;;
-    s) SERVER=true;;
-    *) echo "Unexpected option ${flag}";;
+command -v mvn &>/dev/null || print_error "Maven is not installed"
+[ -z "$*" ] && print_help
+
+for i in "$@"; do
+  case "${i}" in
+    -c|--client) CLIENT=true;;
+    -s|--server) SERVER=true;;
+    -C|--clean) CLEAN=true;;
+    -h|--help) print_help;;
+    *) print_error "Unexpected option ${i}";;
   esac
 done
 
 if [ "$CLIENT" = true ]; then
   echo "Building client ..."
-  mvn clean package -pl client -am -DskipTests 1>&2
+  [ "$CLEAN" = true ] && mvn clean -pl client -am 1>&2
+  mvn package -pl client -am 1>&2
 
   echo "Unpacking client ..."
   pushd client/target &>/dev/null
@@ -35,7 +49,8 @@ fi
 
 if [ "$SERVER" = true ]; then
   echo "Building server ..."
-  mvn clean package -pl server -am -DskipTests 1>&2
+  [ "$CLEAN" = true ] && mvn clean -pl server -am 1>&2
+  mvn package -pl server -am 1>&2
 
   echo "Unpacking server ..."
   pushd server/target &>/dev/null

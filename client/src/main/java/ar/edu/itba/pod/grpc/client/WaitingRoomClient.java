@@ -22,7 +22,7 @@ public class WaitingRoomClient {
 
         final String action = System.getProperty("action");
         final String name = System.getProperty("patient", "");
-        final int level;
+        final String level = System.getProperty("level", "");
 
         if (name.isEmpty()) {
             System.out.println("Patient name is required");
@@ -34,28 +34,42 @@ public class WaitingRoomClient {
 
             switch (action) {
                 case "addPatient" -> {
-                    level = Integer.parseInt(System.getProperty("level", "0"));
-                    if (level == 0) {
+                    if (level.isEmpty()) {
                         System.out.println("Patient level is required");
                         return;
                     }
 
+                    int levelNumber;
                     try {
-                        final Patient patient = blockingStub.addPatient(Patient.newBuilder().setName(name).setLevel(level).build());
+                        levelNumber = Integer.parseInt(level);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Level must be a number");
+                        return;
+                    }
+
+                    try {
+                        final Patient patient = blockingStub.addPatient(Patient.newBuilder().setName(name).setLevel(levelNumber).build());
                         System.out.printf("Patient %s (%d) is in the waiting room\n", patient.getName(), patient.getLevel());
                     } catch (StatusRuntimeException e) {
                         System.out.println(e.getStatus().getDescription());
                     }
                 }
                 case "updateLevel" -> {
-                    level = Integer.parseInt(System.getProperty("level", "0"));
-                    if (level == 0) {
+                    if (level.isEmpty()) {
                         System.out.println("Patient level is required");
                         return;
                     }
 
+                    int levelNumber;
                     try {
-                        final Patient patient = blockingStub.updateLevel(Patient.newBuilder().setName(name).setLevel(level).build());
+                        levelNumber = Integer.parseInt(level);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Level must be a number");
+                        return;
+                    }
+
+                    try {
+                        final Patient patient = blockingStub.updateLevel(Patient.newBuilder().setName(name).setLevel(levelNumber).build());
                         System.out.printf("Patient %s (%d) is in the waiting room\n", patient.getName(), patient.getLevel());
                     } catch (StatusRuntimeException e) {
                         System.out.println(e.getStatus().getDescription());

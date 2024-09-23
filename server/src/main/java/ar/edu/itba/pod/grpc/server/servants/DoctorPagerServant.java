@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 public class DoctorPagerServant extends DoctorPagerServiceImplBase {
 
-    Logger logger = LoggerFactory.getLogger(DoctorPagerServant.class);
+    private static final Logger logger = LoggerFactory.getLogger(DoctorPagerServant.class);
 
     private final DoctorRepository doctorRepository;
     private final EventRepository eventRepository;

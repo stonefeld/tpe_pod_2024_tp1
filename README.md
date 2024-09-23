@@ -7,7 +7,7 @@
 ## Compilado
 Ejecutar para compilar el proyecto
 ```bash
-$ ./tpe_builder.sh -sc
+$ ./tpe_builder.sh -s -c
 ```
 
 ## Ejecucción

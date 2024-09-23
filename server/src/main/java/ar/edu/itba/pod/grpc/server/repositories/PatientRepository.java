@@ -7,7 +7,6 @@ import ar.edu.itba.pod.grpc.server.exceptions.PatientAlreadyExistsException;
 import ar.edu.itba.pod.grpc.server.exceptions.PatientDoesNotExistException;
 import com.google.protobuf.Timestamp;
 
-
 import java.time.Instant;
 import java.util.*;
 

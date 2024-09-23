@@ -1,5 +1,6 @@
 package ar.edu.itba.pod.grpc.client;
 
+import ar.edu.itba.pod.grpc.client.utils.AvailabilityConverter;
 import ar.edu.itba.pod.grpc.client.utils.ChannelBuilder;
 import ar.edu.itba.pod.grpc.hospital.Availability;
 import ar.edu.itba.pod.grpc.hospital.Doctor;
@@ -26,8 +27,8 @@ public class AdministrationClient {
 
         final String action = System.getProperty("action");
         final String doctorName = System.getProperty("doctor", "");
-        final int levelNumber;
-        final Availability availability;
+        final String level = System.getProperty("level", "");
+        final String availabilityName = System.getProperty("availability", "");
 
         try {
             AdministrationServiceBlockingStub blockingStub = AdministrationServiceGrpc.newBlockingStub(channel);
@@ -42,9 +43,16 @@ public class AdministrationClient {
                         System.out.println("Doctor name is required");
                         return;
                     }
-                    levelNumber = Integer.parseInt(System.getProperty("level", "0"));
-                    if (levelNumber == 0) {
+                    if (level.isEmpty()) {
                         System.out.println("Doctor level is required");
+                        return;
+                    }
+
+                    int levelNumber;
+                    try {
+                        levelNumber = Integer.parseInt(level);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Level must be a number");
                         return;
                     }
 
@@ -60,11 +68,23 @@ public class AdministrationClient {
                         System.out.println("Doctor name is required");
                         return;
                     }
-                    availability = Availability.valueOf("AVAILABILITY_" + System.getProperty("availability").toUpperCase());
+                    if (availabilityName.isEmpty()) {
+                        System.out.println("Doctor availability is required");
+                        return;
+                    }
+
+                    Availability availability = AvailabilityConverter.strToAvailability(availabilityName);
+                    if (availability.equals(Availability.AVAILABILITY_UNSPECIFIED)) {
+                        System.out.println("Invalid availability");
+                        return;
+                    }
 
                     try {
                         final Doctor doctor = blockingStub.setDoctor(DoctorAvailabilityUpdate.newBuilder().setDoctorName(doctorName).setAvailability(availability).build());
-                        System.out.printf("Doctor %s (%d) is %s\n", doctor.getName(), doctor.getLevel(), doctor.getAvailability());
+                        System.out.printf("Doctor %s (%d) is %s\n",
+                                doctor.getName(), doctor.getLevel(),
+                                AvailabilityConverter.availabilityToStr(doctor.getAvailability())
+                        );
                     } catch (StatusRuntimeException e) {
                         System.out.println(e.getStatus().getDescription());
                     }
@@ -77,7 +97,10 @@ public class AdministrationClient {
 
                     try {
                         final Doctor doctor = blockingStub.checkDoctor(StringValue.newBuilder().setValue(doctorName).build());
-                        System.out.printf("Doctor %s (%d) is %s\n", doctor.getName(), doctor.getLevel(), doctor.getAvailability());
+                        System.out.printf("Doctor %s (%d) is %s\n",
+                                doctor.getName(), doctor.getLevel(),
+                                AvailabilityConverter.availabilityToStr(doctor.getAvailability())
+                        );
                     } catch (StatusRuntimeException e) {
                         System.out.println(e.getStatus().getDescription());
                     }
