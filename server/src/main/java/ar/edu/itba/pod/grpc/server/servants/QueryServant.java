@@ -3,9 +3,7 @@ package ar.edu.itba.pod.grpc.server.servants;
 import ar.edu.itba.pod.grpc.hospital.Patient;
 import ar.edu.itba.pod.grpc.hospital.Room;
 import ar.edu.itba.pod.grpc.hospital.Treatment;
-import ar.edu.itba.pod.grpc.hospital.Treatments;
 import ar.edu.itba.pod.grpc.hospital.query.QueryServiceGrpc.QueryServiceImplBase;
-import ar.edu.itba.pod.grpc.hospital.query.WaitingPatients;
 import ar.edu.itba.pod.grpc.server.repositories.PatientRepository;
 import ar.edu.itba.pod.grpc.server.repositories.RoomRepository;
 import ar.edu.itba.pod.grpc.server.repositories.TreatmentRepository;
@@ -27,7 +25,7 @@ public class QueryServant extends QueryServiceImplBase {
     }
 
     @Override
-    public void queryRooms(Empty request, StreamObserver<Treatments> responseObserver) {
+    public void queryRooms(Empty request, StreamObserver<Treatment> responseObserver) {
         List<Room> rooms = roomRepository.getRooms();
         if (rooms.isEmpty()) {
             responseObserver.onError(io.grpc.Status.UNAVAILABLE
@@ -36,12 +34,15 @@ public class QueryServant extends QueryServiceImplBase {
             return;
         }
 
-        responseObserver.onNext(Treatments.newBuilder().addAllTreatments(treatmentRepository.getTreatmentsByRoom(rooms)).build());
+        List<Treatment> treatments = treatmentRepository.getTreatmentsByRoom(rooms);
+
+        for (Treatment treatment : treatments)
+            responseObserver.onNext(treatment);
         responseObserver.onCompleted();
     }
 
     @Override
-    public void queryWaitingRoom(Empty request, StreamObserver<WaitingPatients> responseObserver) {
+    public void queryWaitingRoom(Empty request, StreamObserver<Patient> responseObserver) {
         List<Patient> patients = patientRepository.getPatients();
         if (patients.isEmpty()) {
             responseObserver.onError(io.grpc.Status.UNAVAILABLE
@@ -50,12 +51,13 @@ public class QueryServant extends QueryServiceImplBase {
             return;
         }
 
-        responseObserver.onNext(WaitingPatients.newBuilder().addAllPatients(patients).build());
+        for (Patient patient : patients)
+            responseObserver.onNext(patient);
         responseObserver.onCompleted();
     }
 
     @Override
-    public void queryCares(Empty request, StreamObserver<Treatments> responseObserver) {
+    public void queryCares(Empty request, StreamObserver<Treatment> responseObserver) {
         List<Treatment> treatments = treatmentRepository.getCompletedTreatments();
         if (treatments.isEmpty()) {
             responseObserver.onError(io.grpc.Status.UNAVAILABLE
@@ -64,7 +66,8 @@ public class QueryServant extends QueryServiceImplBase {
             return;
         }
 
-        responseObserver.onNext(Treatments.newBuilder().addAllTreatments(treatments).build());
+        for (Treatment treatment : treatments)
+            responseObserver.onNext(treatment);
         responseObserver.onCompleted();
     }
 

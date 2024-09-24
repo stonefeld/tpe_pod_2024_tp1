@@ -12,16 +12,12 @@ option java_multiple_files = true;
 service QueryService {
 
   // List of current rooms with their patients and doctors if not empty
-  rpc QueryRooms(google.protobuf.Empty) returns (Treatments);
+  rpc QueryRooms(google.protobuf.Empty) returns (stream Treatment);
 
   // List of patients waiting for a room while dying
-  rpc QueryWaitingRoom(google.protobuf.Empty) returns (WaitingPatients);
+  rpc QueryWaitingRoom(google.protobuf.Empty) returns (stream Patient);
 
   // List of all treatments
-  rpc QueryCares(google.protobuf.Empty) returns (Treatments);
+  rpc QueryCares(google.protobuf.Empty) returns (stream Treatment);
 
-}
-
-message WaitingPatients {
-  repeated Patient patients = 1;
 }

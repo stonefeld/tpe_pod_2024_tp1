@@ -3,10 +3,8 @@ package ar.edu.itba.pod.grpc.client;
 import ar.edu.itba.pod.grpc.client.utils.ChannelBuilder;
 import ar.edu.itba.pod.grpc.hospital.Patient;
 import ar.edu.itba.pod.grpc.hospital.Treatment;
-import ar.edu.itba.pod.grpc.hospital.Treatments;
 import ar.edu.itba.pod.grpc.hospital.query.QueryServiceGrpc;
 import ar.edu.itba.pod.grpc.hospital.query.QueryServiceGrpc.QueryServiceBlockingStub;
-import ar.edu.itba.pod.grpc.hospital.query.WaitingPatients;
 import com.google.protobuf.Empty;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
@@ -18,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -42,11 +41,12 @@ public class QueryClient {
                         return;
                     }
 
+                    Iterator<Treatment> treatments;
+
                     try {
-                        final Treatments treatments = blockingStub.queryRooms(Empty.newBuilder().build());
+                        treatments = blockingStub.queryRooms(Empty.newBuilder().build());
 
                         String header = "Room,Status,Patient,Doctor";
-                        List<Treatment> treatmentList = treatments.getTreatmentsList();
 
                         Function<Treatment, String> csvLineMapper = treatment -> {
                             String roomNumber = String.valueOf(treatment.getRoom().getNumber());
@@ -60,7 +60,7 @@ public class QueryClient {
                             return String.join(",", roomNumber, status, patient, doctor);
                         };
 
-                        writeToCSV(fileName, header, treatmentList, csvLineMapper);
+                        writeToCSV(fileName, header, treatments, csvLineMapper);
                     } catch (IOException e) {
                         logger.error("Error writing to file: {}", e.getMessage());
                     } catch (StatusRuntimeException e) {
@@ -73,18 +73,19 @@ public class QueryClient {
                         return;
                     }
 
+                    Iterator<Patient> patients;
+
                     try {
-                        final WaitingPatients patients = blockingStub.queryWaitingRoom(Empty.newBuilder().build());
+                        patients = blockingStub.queryWaitingRoom(Empty.newBuilder().build());
 
                         String header = "Patient,Level";
-                        List<Patient> patientList = patients.getPatientsList();
                         Function<Patient, String> csvLineMapper = patient -> {
                             String patientName = patient.getName();
                             String level = String.valueOf(patient.getLevel());
                             return String.join(",", patientName, level);
                         };
 
-                        writeToCSV(fileName, header, patientList, csvLineMapper);
+                        writeToCSV(fileName, header, patients, csvLineMapper);
                     } catch (IOException e) {
                         logger.error("Error writing to file: {}", e.getMessage());
                     } catch (StatusRuntimeException e) {
@@ -97,11 +98,12 @@ public class QueryClient {
                         return;
                     }
 
+                    Iterator<Treatment> treatments;
+
                     try {
-                        final Treatments treatments = blockingStub.queryCares(Empty.newBuilder().build());
+                        treatments = blockingStub.queryCares(Empty.newBuilder().build());
 
                         String header = "Room,Patient,Doctor";
-                        List<Treatment> treatmentList = treatments.getTreatmentsList();
 
                         Function<Treatment, String> csvLineMapper = treatment -> {
                             String roomNumber = String.valueOf(treatment.getRoom().getNumber());
@@ -114,7 +116,7 @@ public class QueryClient {
                             return String.join(",", roomNumber, patient, doctor);
                         };
 
-                        writeToCSV(fileName, header, treatmentList, csvLineMapper);
+                        writeToCSV(fileName, header, treatments, csvLineMapper);
                     } catch (IOException e) {
                         logger.error("Error writing to file: {}", e.getMessage());
                     } catch (StatusRuntimeException e) {
@@ -128,12 +130,12 @@ public class QueryClient {
         }
     }
 
-    private static <T> void writeToCSV(String fileName, String header, List<T> dataList, Function<T, String> csvLineMapper) throws IOException {
+    private static <T> void writeToCSV(String fileName, String header, Iterator<T> dataList, Function<T, String> csvLineMapper) throws IOException {
         List<String> lines = new ArrayList<>();
         lines.add(header);
 
-        for (T data : dataList) {
-            lines.add(csvLineMapper.apply(data));
+        while (dataList.hasNext()) {
+            lines.add(csvLineMapper.apply(dataList.next()));
         }
 
         Files.write(Paths.get(fileName), lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
