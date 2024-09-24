@@ -14,7 +14,7 @@ public class PatientRepository {
 
     private static final Comparator<Patient> COMPARATOR = Comparator
             .comparingLong((Patient p) -> p.getArrivalTime().getSeconds())
-            .thenComparingInt(p -> p.getArrivalTime().getNanos());
+            .thenComparingInt(p -> p.getArrivalTime().getNanos()).thenComparing(Patient::getName);
 
     private final SortedMap<Integer, SortedSet<Patient>> patients = new TreeMap<>(Comparator.reverseOrder());
     private final Set<String> historicPatients = new HashSet<>();

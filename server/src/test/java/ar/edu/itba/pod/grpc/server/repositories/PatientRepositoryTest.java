@@ -31,7 +31,6 @@ public class PatientRepositoryTest {
         assertTrue(patientRepository.patientExists("Martin"));
     }
 
-    //TODO: no se porque falla con mismo nivel
     @Test
     void getPatientsTest() {
         assertDoesNotThrow(() -> patientRepository.addPatient("Martin", 5));
