@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -17,8 +18,8 @@ public class DoctorRepositoryTest {
 
     private static DoctorRepository doctorRepository;
 
-    private static final int THREAD_COUNT = 100;
-    private static final int DOCTORS_BY_THREAD = 100;
+    private static final int THREAD_COUNT = 1000;
+    private static final int DOCTORS_BY_THREAD = 1000;
     private static final int EXPECTED_DOCTORS = THREAD_COUNT * DOCTORS_BY_THREAD;
 
     private final Random r = new Random();
@@ -56,7 +57,7 @@ public class DoctorRepositoryTest {
 
         Runnable addition = () -> {
             for (int i = 0; i < DOCTORS_BY_THREAD; i++) {
-                doctorRepository.addDoctor("Doctor" + r.nextInt(), r.nextInt(1, 5));
+                doctorRepository.addDoctor("Doctor" + UUID.randomUUID(), r.nextInt(1, 5));
             }
         };
 
@@ -66,7 +67,7 @@ public class DoctorRepositoryTest {
             }
         } finally {
             executor.shutdown();
-            executor.awaitTermination(2, TimeUnit.SECONDS);
+            executor.awaitTermination(20, TimeUnit.SECONDS);
         }
 
         assertEquals(EXPECTED_DOCTORS, doctorRepository.getAvailableDoctors().size());
