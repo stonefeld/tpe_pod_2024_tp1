@@ -31,10 +31,8 @@ public class EventRepository {
 
     public void addEvent(String doctor, Event event) {
         synchronized (events) {
-            if (!events.containsKey(doctor)) {
-                return;
-            }
-            events.get(doctor).add(event);
+            if (events.containsKey(doctor))
+                events.get(doctor).add(event);
         }
     }
 

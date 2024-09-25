@@ -13,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
 public class EventRepositoryTest {
 
     private static EventRepository eventRepository;
@@ -25,7 +24,6 @@ public class EventRepositoryTest {
     @BeforeEach
     public void setUp() {
         eventRepository = new EventRepository();
-
     }
 
     @Test

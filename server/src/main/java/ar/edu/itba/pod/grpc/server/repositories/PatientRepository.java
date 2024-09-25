@@ -58,9 +58,11 @@ public class PatientRepository {
 
     public List<Patient> getFirstPatientFromEveryLevel() {
         List<Patient> firstPatients = new ArrayList<>();
-        for (Queue<Patient> patientQueue : patients.values()) {
-            if (!patientQueue.isEmpty())
-                firstPatients.add(patientQueue.stream().findFirst().get());
+        synchronized (patients) {
+            for (Queue<Patient> patientQueue : patients.values()) {
+                if (!patientQueue.isEmpty())
+                    firstPatients.add(patientQueue.stream().findFirst().get());
+            }
         }
         return firstPatients;
     }
