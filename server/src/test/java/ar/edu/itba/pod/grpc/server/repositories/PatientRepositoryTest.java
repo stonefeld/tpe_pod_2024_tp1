@@ -20,7 +20,8 @@ public class PatientRepositoryTest {
     private static final int THREAD_COUNT = 100;
     private static final int PATIENTS_BY_THREAD = 100;
     private static final int EXPECTED_PATIENTS = THREAD_COUNT * PATIENTS_BY_THREAD;
-    Random r = new Random();
+
+    private final Random r = new Random();
 
     @BeforeEach
     public void setUp() {
@@ -81,7 +82,7 @@ public class PatientRepositoryTest {
 
         Runnable addition = () -> {
             for (int i = 0; i < PATIENTS_BY_THREAD; i++) {
-                patientRepository.addPatient(String.valueOf(r.nextInt()), r.nextInt(1, 5));
+                patientRepository.addPatient("Patient" + r.nextInt(), r.nextInt(1, 5));
             }
         };
 
@@ -105,7 +106,8 @@ public class PatientRepositoryTest {
         Runnable addSamePatient = () -> {
             try {
                 patientRepository.addPatient(name, r.nextInt(1, 5));
-            } catch (PatientAlreadyExistsException ignored) {
+            } catch (PatientAlreadyExistsException e) {
+                // Expected
             }
         };
 
@@ -118,9 +120,7 @@ public class PatientRepositoryTest {
             executor.awaitTermination(2, TimeUnit.SECONDS);
         }
 
-        System.out.println(patientRepository.getPatients());
         assertEquals(1, patientRepository.getPatients().size());
     }
-
 
 }

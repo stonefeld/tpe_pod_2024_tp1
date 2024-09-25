@@ -14,9 +14,10 @@ public class PatientRepository {
 
     private static final Comparator<Patient> COMPARATOR = Comparator
             .comparingLong((Patient p) -> p.getArrivalTime().getSeconds())
-            .thenComparingInt(p -> p.getArrivalTime().getNanos()).thenComparing(Patient::getName);
+            .thenComparingInt(p -> p.getArrivalTime().getNanos())
+            .thenComparing(Patient::getName);
 
-    private final SortedMap<Integer, SortedSet<Patient>> patients = new TreeMap<>(Comparator.reverseOrder());
+    private final SortedMap<Integer, Queue<Patient>> patients = new TreeMap<>(Comparator.reverseOrder());
     private final Set<String> historicPatients = new HashSet<>();
 
     public Patient addPatient(String name, int level) {
@@ -28,6 +29,7 @@ public class PatientRepository {
                 throw new PatientAlreadyExistsException();
             historicPatients.add(name);
         }
+
         Instant instant = Instant.now();
         Timestamp timestamp = Timestamp.newBuilder()
                 .setSeconds(instant.getEpochSecond())
@@ -40,7 +42,7 @@ public class PatientRepository {
                 .build();
 
         synchronized (patients) {
-            patients.computeIfAbsent(level, k -> new TreeSet<>(COMPARATOR)).add(patient);
+            patients.computeIfAbsent(level, k -> new PriorityQueue<>(COMPARATOR)).add(patient);
         }
         return patient;
     }
@@ -56,7 +58,7 @@ public class PatientRepository {
 
     public List<Patient> getFirstPatientFromEveryLevel() {
         List<Patient> firstPatients = new ArrayList<>();
-        for (Set<Patient> patientQueue : patients.values()) {
+        for (Queue<Patient> patientQueue : patients.values()) {
             if (!patientQueue.isEmpty())
                 firstPatients.add(patientQueue.stream().findFirst().get());
         }
@@ -76,12 +78,12 @@ public class PatientRepository {
 
         Patient.Builder patientBuilder = Patient.newBuilder().setName(name).setLevel(level);
         synchronized (patients) {
-            for (Set<Patient> patientQueue : patients.values()) {
+            for (Queue<Patient> patientQueue : patients.values()) {
                 for (Patient p : patientQueue) {
                     if (p.getName().equals(name)) {
                         Patient patient = patientBuilder.setArrivalTime(p.getArrivalTime()).build();
                         patientQueue.remove(p);
-                        patients.computeIfAbsent(level, k -> new TreeSet<>(COMPARATOR)).add(patient);
+                        patients.computeIfAbsent(level, k -> new PriorityQueue<>(COMPARATOR)).add(patient);
                         return patient;
                     }
                 }
@@ -91,22 +93,27 @@ public class PatientRepository {
     }
 
     public PatientQueueInfo checkPatient(String name) {
+        int count = 0;
+
         synchronized (patients) {
-            int count = 0;
-            for (Set<Patient> queue : patients.values()) {
-                for (Patient patient : queue) {
+            for (Queue<Patient> queue : patients.values()) {
+                SortedSet<Patient> sortedQueue = new TreeSet<>(COMPARATOR);
+                sortedQueue.addAll(queue);
+
+                for (Patient patient : sortedQueue) {
                     if (patient.getName().equals(name))
                         return PatientQueueInfo.newBuilder().setPatient(patient).setQueueLength(count).build();
                     count++;
                 }
             }
         }
+
         throw new PatientDoesNotExistException();
     }
 
     public boolean patientExists(String name) {
         synchronized (patients) {
-            for (Set<Patient> queue : patients.values()) {
+            for (Queue<Patient> queue : patients.values()) {
                 for (Patient patient : queue) {
                     if (patient.getName().equals(name))
                         return true;

@@ -79,7 +79,6 @@ public class AdministrationServant extends AdministrationServiceImplBase {
         }
 
         Doctor doctor = doctorRepository.setDoctorAvailability(request.getDoctorName(), request.getAvailability());
-        // TODO: chequear que se haya hecho correcto
         eventRepository.addEvent(doctor.getName(), Event.newBuilder()
                 .setType(Type.AVAILABILITY)
                 .setDoctor(doctor)

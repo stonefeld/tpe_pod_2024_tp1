@@ -7,63 +7,71 @@ import ar.edu.itba.pod.grpc.server.exceptions.DoctorDoesNotExistException;
 import ar.edu.itba.pod.grpc.server.exceptions.InvalidLevelException;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.Map;
 
 public class DoctorRepository {
 
-    private final SortedSet<Doctor> doctors = new TreeSet<>(Comparator.comparingInt(Doctor::getLevel).thenComparing(Doctor::getName));
+    private final Map<String, Doctor> doctors = new HashMap<>();
 
     public Doctor addDoctor(String name, int level) {
-        if (doctorExists(name))
-            throw new DoctorAlreadyExistsException();
         if (level < 1 || level > 5)
             throw new InvalidLevelException();
+        if (doctors.containsKey(name))
+            throw new DoctorAlreadyExistsException();
 
-        Doctor doctor = Doctor.newBuilder().setName(name).setLevel(level).setAvailability(Availability.AVAILABILITY_AVAILABLE).build();
+        Doctor doctor = Doctor.newBuilder()
+                .setName(name)
+                .setLevel(level)
+                .setAvailability(Availability.AVAILABILITY_AVAILABLE)
+                .build();
+
         synchronized (doctors) {
-            doctors.add(doctor);
+            doctors.put(name, doctor);
         }
+
         return doctor;
     }
 
-    // TODO: REVISE THIS BULLSHIT
     public Doctor setDoctorAvailability(String doctorName, Availability availability) {
+        if (!doctors.containsKey(doctorName))
+            throw new DoctorDoesNotExistException();
+
+        Doctor.Builder doctorBuilder = Doctor.newBuilder().setName(doctorName).setAvailability(availability);
+        Doctor doctor;
+
         synchronized (doctors) {
-            Doctor.Builder doctorBuilder = Doctor.newBuilder().setName(doctorName).setAvailability(availability);
-            for (Doctor d : doctors) {
-                if (d.getName().equals(doctorName)) {
-                    Doctor doctor = doctorBuilder.setLevel(d.getLevel()).build();
-                    doctors.remove(d);
-                    doctors.add(doctor);
-                    return doctor;
-                }
-            }
+            doctor = doctorBuilder.setLevel(doctors.get(doctorName).getLevel()).build();
+            doctors.put(doctorName, doctor);
         }
-        throw new DoctorDoesNotExistException();
+
+        return doctor;
     }
 
     public Doctor checkDoctor(String doctorName) {
-        for (Doctor d : doctors) {
-            if (d.getName().equals(doctorName))
-                return d;
+        synchronized (doctors) {
+            if (doctors.containsKey(doctorName))
+                return doctors.get(doctorName);
         }
         throw new DoctorDoesNotExistException();
     }
 
     public List<Doctor> getAvailableDoctors() {
+        List<Doctor> availableDoctors;
         synchronized (doctors) {
-            return doctors.stream().filter(d -> d.getAvailability().equals(Availability.AVAILABILITY_AVAILABLE)).toList();
+            availableDoctors = doctors.values().stream()
+                    .filter(d -> d.getAvailability().equals(Availability.AVAILABILITY_AVAILABLE))
+                    .sorted(Comparator.comparingInt(Doctor::getLevel) .thenComparing(Doctor::getName))
+                    .toList();
         }
+        return availableDoctors;
     }
 
     public boolean doctorExists(String doctorName) {
-        for (Doctor d : doctors) {
-            if (d.getName().equals(doctorName))
-                return true;
+        synchronized (doctors) {
+            return doctors.containsKey(doctorName);
         }
-        return false;
     }
 
 }

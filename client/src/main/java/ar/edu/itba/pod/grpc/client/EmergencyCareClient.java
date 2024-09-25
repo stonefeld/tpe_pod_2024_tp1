@@ -7,6 +7,7 @@ import ar.edu.itba.pod.grpc.hospital.TreatmentRoom;
 import ar.edu.itba.pod.grpc.hospital.Treatments;
 import ar.edu.itba.pod.grpc.hospital.emergencycare.EmergencyCareServiceGrpc;
 import ar.edu.itba.pod.grpc.hospital.emergencycare.TreatmentEnding;
+
 import com.google.protobuf.Empty;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
