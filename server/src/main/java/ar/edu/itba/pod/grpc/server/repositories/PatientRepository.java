@@ -47,9 +47,11 @@ public class PatientRepository {
 
     public List<Patient> getPatients() {
         List<Patient> allPatients = new ArrayList<>();
-        for (Set<Patient> patientQueue : patients.values())
-            allPatients.addAll(patientQueue);
-        return allPatients;
+        synchronized (patients) {
+            for (Set<Patient> patientQueue : patients.values())
+                allPatients.addAll(patientQueue);
+            return allPatients;
+        }
     }
 
     public List<Patient> getFirstPatientFromEveryLevel() {

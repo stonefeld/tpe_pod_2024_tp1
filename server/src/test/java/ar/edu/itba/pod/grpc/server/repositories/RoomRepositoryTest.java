@@ -8,6 +8,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,54 +21,90 @@ public class RoomRepositoryTest {
     public void setUp() {
         roomRepository = new RoomRepository();
     }
+
+    private static final int THREAD_COUNT = 1000;
+    private static final int ROOMS_BY_THREAD = 1000;
+    private static final int EXPECTED_ROOMS = THREAD_COUNT * ROOMS_BY_THREAD;
+
+
     @Test
     void addRoomTest() {
-         assertEquals(1, roomRepository.addRoom().getNumber());
-         assertEquals(Status.STATUS_FREE,roomRepository.addRoom().getStatus());
-         assertEquals(3, roomRepository.addRoom().getNumber());
-         assertEquals(4, roomRepository.addRoom().getNumber());
+        Room room = roomRepository.addRoom();
+        assertEquals(1, room.getNumber());
+        assertEquals(Status.STATUS_FREE, room.getStatus());
     }
+
     @Test
     void getRoomTest() {
-        roomRepository.addRoom();
-        roomRepository.addRoom();
-        roomRepository.addRoom();
-        roomRepository.addRoom();
-        assertEquals(1, roomRepository.getRoom(1).getNumber());
-        assertEquals(2, roomRepository.getRoom(2).getNumber());
-        assertEquals(3, roomRepository.getRoom(3).getNumber());
-        assertEquals(4, roomRepository.getRoom(4).getNumber());
-        assertThrows(RoomDoesNotExistException.class, () -> roomRepository.getRoom(5));
+        Room room = roomRepository.addRoom();
+        Room room2 = roomRepository.getRoom(room.getNumber());
+        assertEquals(room.getNumber(), room2.getNumber());
+        assertEquals(room.getStatus(), room2.getStatus());
     }
+
+    @Test
+    void getRoomNotExistsTest() {
+        assertThrows(RoomDoesNotExistException.class, () -> roomRepository.getRoom(1));
+    }
+
     @Test
     void setRoomStatusTest() {
-        roomRepository.addRoom();
-        roomRepository.addRoom();
-        roomRepository.addRoom();
-        roomRepository.addRoom();
-        assertEquals(Status.STATUS_FREE, roomRepository.getRoom(1).getStatus());
-        assertEquals(Status.STATUS_OCCUPIED, roomRepository.setRoomStatus(1, Status.STATUS_OCCUPIED).getStatus());
-
+        Room room = roomRepository.addRoom();
+        Room room2 = roomRepository.setRoomStatus(1, Status.STATUS_OCCUPIED);
+        assertEquals(room.getNumber(), room2.getNumber());
+        assertEquals(Status.STATUS_OCCUPIED, room2.getStatus());
     }
+
     @Test
     void getRoomsTest() {
         List<Room> rooms = new ArrayList<>();
-        rooms.add(roomRepository.addRoom());
-        rooms.add(roomRepository.addRoom());
-        rooms.add(roomRepository.addRoom());
-        rooms.add(roomRepository.addRoom());
-        assertEquals(rooms, roomRepository.getRooms());
+        Room room = roomRepository.addRoom();
+        rooms.add(room);
+        Room room2 = roomRepository.addRoom();
+        rooms.add(room2);
+
+        List<Room> r = roomRepository.getRooms();
+        assertEquals(2, r.size());
+        assertEquals(room.getNumber(), r.get(0).getNumber());
+        assertEquals(room2.getNumber(), r.get(1).getNumber());
+        assertEquals(rooms, r);
     }
+
     @Test
     void roomExistsTest() {
         roomRepository.addRoom();
-        roomRepository.addRoom();
-        roomRepository.addRoom();
-        roomRepository.addRoom();
         assertTrue(roomRepository.roomExists(1));
-        assertTrue(roomRepository.roomExists(2));
-        assertTrue(roomRepository.roomExists(3));
-        assertTrue(roomRepository.roomExists(4));
-        assertFalse(roomRepository.roomExists(5));
     }
+
+    @Test
+    void roomDoesNotExistTest() {
+        assertFalse(roomRepository.roomExists(1));
+    }
+
+    @Test
+    void concurrentAddRoomTest() throws InterruptedException {
+        ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
+
+        Runnable addition = () -> {
+            for (int i = 0; i < ROOMS_BY_THREAD; i++) {
+                roomRepository.addRoom();
+            }
+        };
+
+        try {
+            for (int i = 0; i < THREAD_COUNT; i++) {
+                executor.submit(addition);
+            }
+        } finally {
+            executor.shutdown();
+            executor.awaitTermination(20, TimeUnit.SECONDS);
+        }
+
+        List<Room> rooms = roomRepository.getRooms();
+        assertEquals(EXPECTED_ROOMS, rooms.size());
+        for (int i = 1; i <= EXPECTED_ROOMS; i++) {
+            assertEquals(i, rooms.get(i - 1).getNumber());
+        }
+    }
+
 }

@@ -1,7 +1,6 @@
 package ar.edu.itba.pod.grpc.server.repositories;
 
 import ar.edu.itba.pod.grpc.server.exceptions.InvalidLevelException;
-import ar.edu.itba.pod.grpc.hospital.Patient;
 import ar.edu.itba.pod.grpc.server.exceptions.PatientAlreadyExistsException;
 import ar.edu.itba.pod.grpc.server.exceptions.PatientDoesNotExistException;
 import org.junit.jupiter.api.BeforeEach;

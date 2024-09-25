@@ -41,7 +41,9 @@ public class RoomRepository {
     }
 
     public List<Room> getRooms() {
-        return List.copyOf(rooms);
+        synchronized (rooms) {
+            return List.copyOf(rooms);
+        }
     }
 
     public boolean roomExists(int roomNumber) {
