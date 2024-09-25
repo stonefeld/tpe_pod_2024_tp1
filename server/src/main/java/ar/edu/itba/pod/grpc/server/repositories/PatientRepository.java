@@ -20,12 +20,14 @@ public class PatientRepository {
     private final Set<String> historicPatients = new HashSet<>();
 
     public Patient addPatient(String name, int level) {
-        if (historicPatients.contains(name))
-            throw new PatientAlreadyExistsException();
         if (level < 1 || level > 5)
             throw new InvalidLevelException();
 
-        historicPatients.add(name);
+        synchronized (historicPatients) {
+            if (historicPatients.contains(name))
+                throw new PatientAlreadyExistsException();
+            historicPatients.add(name);
+        }
         Instant instant = Instant.now();
         Timestamp timestamp = Timestamp.newBuilder()
                 .setSeconds(instant.getEpochSecond())
