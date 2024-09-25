@@ -50,7 +50,7 @@ public class PatientRepository {
     public List<Patient> getPatients() {
         List<Patient> allPatients = new ArrayList<>();
         synchronized (patients) {
-            for (Set<Patient> patientQueue : patients.values())
+            for (Queue<Patient> patientQueue : patients.values())
                 allPatients.addAll(patientQueue);
             return allPatients;
         }

@@ -75,6 +75,7 @@ public class DoctorPagerClient {
                                         event.getTreatment().getDoctor().getLevel(),
                                         event.getTreatment().getRoom().getNumber()
                                 );
+                                default -> throw new IllegalArgumentException("Unexpected value: " + event.getType());
                             }
                         }
                     } catch (StatusRuntimeException e) {
