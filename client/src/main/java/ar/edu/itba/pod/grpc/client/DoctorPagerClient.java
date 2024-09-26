@@ -8,21 +8,22 @@ import ar.edu.itba.pod.grpc.hospital.doctorpager.Event;
 import ar.edu.itba.pod.grpc.hospital.doctorpager.Type;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 public class DoctorPagerClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(DoctorPagerClient.class);
-
     public static void main(String[] args) throws InterruptedException {
         ManagedChannel channel = ChannelBuilder.buildChannel();
 
-        final String action = System.getProperty("action");
+        final String action = System.getProperty("action", "");
         final String doctorName = System.getProperty("doctor", "");
+
+        if (action.isEmpty()) {
+            System.out.println("Action is required");
+            return;
+        }
 
         if (doctorName.isEmpty()) {
             System.out.println("Doctor name is required");
@@ -96,7 +97,7 @@ public class DoctorPagerClient {
                         System.out.println(e.getStatus().getDescription());
                     }
                 }
-                default -> logger.error("Invalid action: {}", action);
+                default -> System.out.println("Invalid action");
             }
         } finally {
             channel.shutdown().awaitTermination(10, TimeUnit.SECONDS);

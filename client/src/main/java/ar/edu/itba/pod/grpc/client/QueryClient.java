@@ -28,8 +28,13 @@ public class QueryClient {
     public static void main(String[] args) throws InterruptedException {
         ManagedChannel channel = ChannelBuilder.buildChannel();
 
-        final String action = System.getProperty("action");
+        final String action = System.getProperty("action", "");
         final String fileName = System.getProperty("outPath", "");
+
+        if (action.isEmpty()) {
+            System.out.println("Action is required");
+            return;
+        }
 
         try {
             QueryServiceBlockingStub blockingStub = QueryServiceGrpc.newBlockingStub(channel);
@@ -123,7 +128,7 @@ public class QueryClient {
                         System.out.println(e.getStatus().getDescription());
                     }
                 }
-                default -> logger.error("Invalid action: {}", action);
+                default -> System.out.println("Invalid action");
             }
         } finally {
             channel.shutdown().awaitTermination(10, TimeUnit.SECONDS);

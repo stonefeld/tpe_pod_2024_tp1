@@ -13,22 +13,23 @@ import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
 public class AdministrationClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(AdministrationClient.class);
-
     public static void main(String[] args) throws InterruptedException {
         ManagedChannel channel = ChannelBuilder.buildChannel();
 
-        final String action = System.getProperty("action");
+        final String action = System.getProperty("action", "");
         final String doctorName = System.getProperty("doctor", "");
         final String level = System.getProperty("level", "");
         final String availabilityName = System.getProperty("availability", "");
+
+        if (action.isEmpty()) {
+            System.out.println("Action is required");
+            return;
+        }
 
         try {
             AdministrationServiceBlockingStub blockingStub = AdministrationServiceGrpc.newBlockingStub(channel);
@@ -105,7 +106,7 @@ public class AdministrationClient {
                         System.out.println(e.getStatus().getDescription());
                     }
                 }
-                default -> logger.error("Invalid action: {}", action);
+                default -> System.out.println("Invalid action");
             }
         } finally {
             channel.shutdown().awaitTermination(10, TimeUnit.SECONDS);

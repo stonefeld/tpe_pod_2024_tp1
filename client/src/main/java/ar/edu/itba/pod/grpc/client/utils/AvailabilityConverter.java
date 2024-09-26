@@ -15,10 +15,10 @@ public class AvailabilityConverter {
 
     public static String availabilityToStr(Availability availability) {
         return switch (availability) {
-            case AVAILABILITY_AVAILABLE -> "available";
-            case AVAILABILITY_UNAVAILABLE -> "unavailable";
-            case AVAILABILITY_ATTENDING -> "attending";
-            default -> "unspecified";
+            case AVAILABILITY_AVAILABLE -> "Available";
+            case AVAILABILITY_UNAVAILABLE -> "Unavailable";
+            case AVAILABILITY_ATTENDING -> "Attending";
+            default -> "Unspecified";
         };
     }
 

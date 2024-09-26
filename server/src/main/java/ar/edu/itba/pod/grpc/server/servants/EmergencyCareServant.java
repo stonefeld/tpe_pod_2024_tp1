@@ -116,7 +116,6 @@ public class EmergencyCareServant extends EmergencyCareServiceImplBase {
     }
 
     private Treatment createTreatment(Room room) {
-        // TODO: se re coge la concurrencia
         if (room.getStatus().equals(Status.STATUS_FREE)) {
             List<Patient> waitingPatients = patientRepository.getFirstPatientFromEveryLevel();
             List<Doctor> availableDoctors = doctorRepository.getAvailableDoctors();

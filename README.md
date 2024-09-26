@@ -18,9 +18,9 @@ $ mvn clean package
 ````
 
 > Se puede especificar `-am <module> -pl` para armar el
-> package de un modulo en particular
+> package de un módulo en particular
 
-Una vez hecho esto, el modulo `api` se habrá compilado y los módulos `server` y
+Una vez hecho esto, el módulo `api` se habrá compilado y los módulos `server` y
 `client` habrán generado comprimidos con extensión `.tar.gz` en las carpetas
 `target/` de cada módulo.
 

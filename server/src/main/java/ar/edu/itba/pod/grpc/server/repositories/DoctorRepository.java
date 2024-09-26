@@ -62,7 +62,7 @@ public class DoctorRepository {
         synchronized (doctors) {
             availableDoctors = doctors.values().stream()
                     .filter(d -> d.getAvailability().equals(Availability.AVAILABILITY_AVAILABLE))
-                    .sorted(Comparator.comparingInt(Doctor::getLevel) .thenComparing(Doctor::getName))
+                    .sorted(Comparator.comparingInt(Doctor::getLevel).thenComparing(Doctor::getName))
                     .toList();
         }
         return availableDoctors;

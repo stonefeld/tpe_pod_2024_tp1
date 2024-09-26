@@ -8,21 +8,22 @@ import ar.edu.itba.pod.grpc.hospital.waitingroom.WaitingRoomServiceGrpc.WaitingR
 import com.google.protobuf.StringValue;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
 public class WaitingRoomClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(WaitingRoomClient.class);
-
     public static void main(String[] args) throws InterruptedException {
         ManagedChannel channel = ChannelBuilder.buildChannel();
 
-        final String action = System.getProperty("action");
+        final String action = System.getProperty("action", "");
         final String name = System.getProperty("patient", "");
         final String level = System.getProperty("level", "");
+
+        if (action.isEmpty()) {
+            System.out.println("Action is required");
+            return;
+        }
 
         if (name.isEmpty()) {
             System.out.println("Patient name is required");
@@ -83,7 +84,7 @@ public class WaitingRoomClient {
                         System.out.println(e.getStatus().getDescription());
                     }
                 }
-                default -> logger.error("Invalid action: {}", action);
+                default -> System.out.println("Invalid action");
             }
         } finally {
             channel.shutdown().awaitTermination(10, TimeUnit.SECONDS);

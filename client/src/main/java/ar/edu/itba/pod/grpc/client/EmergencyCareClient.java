@@ -7,26 +7,26 @@ import ar.edu.itba.pod.grpc.hospital.TreatmentRoom;
 import ar.edu.itba.pod.grpc.hospital.Treatments;
 import ar.edu.itba.pod.grpc.hospital.emergencycare.EmergencyCareServiceGrpc;
 import ar.edu.itba.pod.grpc.hospital.emergencycare.TreatmentEnding;
-
 import com.google.protobuf.Empty;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
 public class EmergencyCareClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(EmergencyCareClient.class);
-
     public static void main(String[] args) throws InterruptedException {
         ManagedChannel channel = ChannelBuilder.buildChannel();
 
-        final String action = System.getProperty("action");
+        final String action = System.getProperty("action", "");
         final String doctorName = System.getProperty("doctor", "");
         final String patientName = System.getProperty("patient", "");
         final String room = System.getProperty("room", "");
+
+        if (action.isEmpty()) {
+            System.out.println("Action is required");
+            return;
+        }
 
         try {
             EmergencyCareServiceGrpc.EmergencyCareServiceBlockingStub blockingStub = EmergencyCareServiceGrpc.newBlockingStub(channel);
@@ -115,7 +115,7 @@ public class EmergencyCareClient {
                         System.out.println(e.getStatus().getDescription());
                     }
                 }
-                default -> logger.error("Invalid action: {}", action);
+                default -> System.out.println("Invalid action");
             }
         } finally {
             channel.shutdown().awaitTermination(10, TimeUnit.SECONDS);
