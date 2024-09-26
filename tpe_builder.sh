@@ -43,8 +43,8 @@ if [ "$CLIENT" = true ]; then
   [ -d bin/client ] && rm -rf bin/client
   mkdir -p bin/client
 
+  [ "$CLEAN" = true ] && { echo "Cleaning client ..."; mvn clean -pl client -am &>/dev/null; }
   echo "Building client ..."
-  [ "$CLEAN" = true ] && mvn clean -pl client -am 1>&2
   mvn package -pl client -am &>$log_file
 
   [ $? -ne 0 ] && print_error "Error building client. Check ${log_file} for more information"
@@ -60,8 +60,8 @@ if [ "$SERVER" = true ]; then
   [ -d bin/server ] && rm -rf bin/server
   mkdir -p bin/server
 
+  [ "$CLEAN" = true ] && { echo "Cleaning server ..."; mvn clean -pl server -am &>/dev/null; }
   echo "Building server ..."
-  [ "$CLEAN" = true ] && mvn clean -pl server -am 1>&2
   mvn package -pl server -am &>$log_file
 
   [ $? -ne 0 ] && print_error "Error building server. Check ${log_file} for more information"
