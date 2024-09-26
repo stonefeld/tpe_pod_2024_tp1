@@ -58,6 +58,12 @@ public class TreatmentRepository {
         return treatments;
     }
 
+    public List<Treatment> getCurrentTreatments() {
+        synchronized (currentTreatments) {
+            return List.copyOf(currentTreatments);
+        }
+    }
+
     public List<Treatment> getCompletedTreatments() {
         return List.copyOf(completedTreatments);
     }
